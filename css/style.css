@@ -165,12 +165,28 @@ body.home-page {
 }
 
 body.home-page .header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
   background-color: transparent;
-  border-bottom: none;
+  border-bottom: 1px solid transparent;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: background-color 0.4s ease, border-color 0.4s ease, backdrop-filter 0.4s ease, -webkit-backdrop-filter 0.4s ease;
+  z-index: 1000;
+}
+
+body.home-page .header:hover {
+  background-color: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 body.home-page .nav-container {
   justify-content: center;
+  height: 72px;
 }
 
 body.home-page .tab-group {
@@ -190,7 +206,16 @@ body.home-page .tab-item a {
   font-weight: 300;
   letter-spacing: 0.05em;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  transition: color 0.25s ease, text-shadow 0.25s ease;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease, color 0.25s ease, text-shadow 0.25s ease;
+}
+
+body.home-page .header:hover .tab-item a {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 body.home-page .tab-item a::after {
@@ -227,6 +252,7 @@ body.home-page .tab-item a.active {
   backdrop-filter: none;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
+
 
 
 
