@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    공통 기본 스타일 (Reset & Base)
    ========================================================================== */
 :root {
@@ -143,3 +143,82 @@ body {
   border-top: 1px solid var(--border-color);
   background-color: var(--card-bg);
 }
+
+/* ==========================================================================
+   홈페이지 전용 풀스크린 감성 배경 & 화이트 버튼 스타일
+   ========================================================================== */
+body.home-page {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)),
+                    url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2070&q=80");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+body.home-page .header {
+  background-color: transparent;
+  border-bottom: none;
+}
+
+body.home-page .logo {
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.05em;
+}
+
+body.home-page .tab-item a {
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+body.home-page .tab-item a:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  backdrop-filter: blur(4px);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+body.home-page .tab-item a.active {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(6px);
+}
+
+body.home-page .home-hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #ffffff;
+  padding: 0 1.5rem;
+}
+
+body.home-page .home-hero-content {
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+body.home-page .home-hero-title {
+  font-size: 2.75rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+body.home-page .home-hero-subtitle {
+  font-size: 1.15rem;
+  opacity: 0.9;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+
