@@ -67,8 +67,13 @@ body {
 /* ==========================================================================
    상단 네비게이션 & 탭 바 (Navbar & Tabs)
    ========================================================================== */
+/* ==========================================================================
+   상단 네비게이션 & 탭 바 (Navbar & Tabs) - 공통 중앙 정렬 및 80px 규격
+   ========================================================================== */
 .header {
-  background-color: var(--card-bg);
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
@@ -79,46 +84,66 @@ body {
   max-width: 1024px;
   margin: 0 auto;
   padding: 0 1.5rem;
-  height: var(--nav-height);
+  height: 80px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.logo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-main);
-  text-decoration: none;
+  justify-content: center;
 }
 
 .tab-group {
   display: flex;
-  gap: 0.5rem;
+  gap: 3.5rem;
   list-style: none;
 }
 
 .tab-item a {
+  position: relative;
   display: inline-block;
-  padding: 0.5rem 1rem;
-  color: var(--text-muted);
+  font-family: "Noto Sans KR", -apple-system, sans-serif;
+  color: #64748b;
   text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  font-size: 1.05rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  transition: color 0.25s ease;
+}
+
+.tab-item a::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 1px;
+  background-color: #0f172a;
+  border-radius: 1px;
+  transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .tab-item a:hover {
-  color: var(--primary-color);
-  background-color: #eff6ff;
+  color: #0f172a;
+  background: transparent;
+}
+
+.tab-item a:hover::after {
+  width: calc(100% - 1.5rem);
 }
 
 /* 활성화된 탭 스타일 */
 .tab-item a.active {
-  color: var(--primary-color);
-  background-color: #dbeafe;
-  font-weight: 600;
+  color: #0f172a;
+  background: transparent;
+  font-weight: 500;
+}
+
+.tab-item a.active::after {
+  width: calc(100% - 1.5rem);
+  background-color: #0f172a;
 }
 
 /* ==========================================================================
@@ -174,39 +199,6 @@ body {
 body.about-page {
   background-color: #ffffff;
   color: #1f2937;
-}
-
-body.about-page .header {
-  background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid #f1f5f9;
-}
-
-body.about-page .logo {
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #0f172a;
-}
-
-body.about-page .tab-item a {
-  color: #64748b;
-  font-size: 0.95rem;
-  font-weight: 400;
-  border-radius: 6px;
-  padding: 0.45rem 0.9rem;
-  transition: color 0.15s ease, background-color 0.15s ease;
-}
-
-body.about-page .tab-item a:hover {
-  color: #0284c7;
-  background-color: #f0f9ff;
-}
-
-body.about-page .tab-item a.active {
-  color: #0284c7;
-  background-color: #e0f2fe;
-  font-weight: 600;
 }
 
 /* 이력서 레이아웃 컨테이너 */
@@ -827,75 +819,6 @@ body.home-page .home-hero-subtitle {
 body.portfolio-page {
   background-color: #ffffff;
   color: #1f2937;
-}
-
-body.portfolio-page .header {
-  position: sticky;
-  top: 0;
-  width: 100%;
-  background-color: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid #f1f5f9;
-  z-index: 100;
-}
-
-body.portfolio-page .nav-container {
-  justify-content: center;
-  height: 80px;
-}
-
-body.portfolio-page .tab-group {
-  gap: 3.5rem;
-}
-
-body.portfolio-page .tab-item a {
-  position: relative;
-  display: inline-block;
-  font-family: "Noto Sans KR", -apple-system, sans-serif;
-  color: #64748b;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0.5rem 0.75rem;
-  font-size: 1.05rem;
-  font-weight: 300;
-  letter-spacing: 0.05em;
-  text-decoration: none;
-  transition: color 0.25s ease;
-}
-
-body.portfolio-page .tab-item a::after {
-  content: "";
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 1px;
-  background-color: #0f172a;
-  border-radius: 1px;
-  transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-body.portfolio-page .tab-item a:hover {
-  background: transparent;
-  color: #0f172a;
-}
-
-body.portfolio-page .tab-item a:hover::after {
-  width: calc(100% - 1.5rem);
-}
-
-body.portfolio-page .tab-item a.active {
-  background: transparent;
-  color: #0f172a;
-  font-weight: 500;
-}
-
-body.portfolio-page .tab-item a.active::after {
-  width: calc(100% - 1.5rem);
-  background-color: #0f172a;
 }
 
 /* 포트폴리오 메인 래퍼 */
