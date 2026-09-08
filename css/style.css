@@ -1,6 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@200;300;400;500;700&display=swap");
+
 /* ==========================================================================
    공통 기본 스타일 (Reset & Base)
    ========================================================================== */
+
 :root {
   --primary-color: #2563eb;
   --primary-hover: #1d4ed8;
@@ -177,14 +180,16 @@ body.home-page .tab-group {
 body.home-page .tab-item a {
   position: relative;
   display: inline-block;
-  color: rgba(255, 255, 255, 0.85);
+  font-family: "Noto Sans KR", -apple-system, sans-serif;
+  color: rgba(255, 255, 255, 0.9);
   background: transparent;
   border: none;
   border-radius: 0;
   padding: 0.5rem 0.75rem;
   font-size: 1.05rem;
-  font-weight: 400;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   transition: color 0.25s ease, text-shadow 0.25s ease;
 }
 
@@ -195,10 +200,10 @@ body.home-page .tab-item a::after {
   left: 50%;
   transform: translateX(-50%);
   width: 0;
-  height: 2px;
+  height: 1px;
   background-color: #ffffff;
-  border-radius: 2px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  border-radius: 1px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
@@ -206,7 +211,7 @@ body.home-page .tab-item a:hover,
 body.home-page .tab-item a.active:hover {
   background: transparent;
   color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
 
 body.home-page .tab-item a:hover::after,
@@ -216,12 +221,13 @@ body.home-page .tab-item a.active:hover::after {
 
 body.home-page .tab-item a.active {
   background: transparent;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 300;
   border: none;
   backdrop-filter: none;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
+
 
 
 
