@@ -167,37 +167,41 @@ body.home-page .header {
 }
 
 body.home-page .nav-container {
-  justify-content: flex-end;
+  justify-content: center;
 }
 
-
-body.home-page .logo {
-  color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  letter-spacing: 0.05em;
+body.home-page .tab-group {
+  gap: 1.5rem;
 }
 
 body.home-page .tab-item a {
-  color: #ffffff;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-  font-weight: 500;
-  border: 1px solid transparent;
-  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.85);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 400;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
 }
 
 body.home-page .tab-item a:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: transparent;
   color: #ffffff;
-  backdrop-filter: blur(4px);
-  border-color: rgba(255, 255, 255, 0.3);
+  opacity: 1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
 }
 
 body.home-page .tab-item a.active {
-  background-color: rgba(255, 255, 255, 0.25);
+  background: transparent;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(6px);
+  font-weight: 700;
+  border: none;
+  backdrop-filter: none;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
+
 
 body.home-page .home-hero {
   flex: 1;
