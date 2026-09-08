@@ -6,7 +6,7 @@
   <title>포폴소개 | dokhaknote99 포트폴리오</title>
   <link rel="stylesheet" href="css/style.css?v=11">
 </head>
-<body>
+<body class="portfolio-page">
 
   <!-- 0.4초 시네마틱 페이드 전환 오버레이 -->
   <div id="page-transition-overlay"></div>
@@ -24,18 +24,122 @@
     </div>
   </header>
 
-  <!-- 메인 콘텐츠 영역 -->
-  <main class="main-container">
-    <section class="content-card">
-      <h1 class="page-title">포트폴리오 (Projects)</h1>
-      <p class="page-desc">제가 직접 진행한 프로젝트와 결과물을 소개하는 페이지입니다.</p>
-
-      <!-- 포폴소개 빈 페이지 구조 뼈대 -->
-      <div class="placeholder-box">
-        <h3>💼 포트폴리오 프로젝트 목록 구조</h3>
-        <p>이곳에 프로젝트 카드(썸네일, 프로젝트명, 설명, 사용 기술, GitHub 링크, 배포 링크 등)를 배치할 수 있습니다.</p>
-      </div>
+  <!-- 메인 포트폴리오 래퍼 -->
+  <main class="portfolio-wrapper">
+    <!-- 상단 소개 영역 -->
+    <section class="portfolio-hero">
+      <h1 class="portfolio-hero-title">주요 프로젝트</h1>
+      <p class="portfolio-hero-desc">
+        단순한 UI 클론이 아닌, 실제 프로덕션 수준의 성능 병목 해결과 견고한 아키텍처 설계를 목표로 직접 구현한 엔지니어링 프로젝트들입니다.
+      </p>
     </section>
+
+    <!-- 프로젝트 쇼케이스 리스트 -->
+    <div class="portfolio-grid">
+
+      <!-- 프로젝트 1: PulseFlow -->
+      <article class="showcase-card">
+        <div class="showcase-media">
+          <img src="images/project-pulseflow.jpg" alt="PulseFlow 모니터링 대시보드 스크린샷" loading="lazy">
+        </div>
+        <div class="showcase-content">
+          <div class="showcase-meta">
+            <span>팀 프로젝트 · Full-Stack &amp; Performance</span>
+            <span class="showcase-period">2025.04 — 2025.10</span>
+          </div>
+          <h2 class="showcase-title">PulseFlow — 대용량 시계열 실시간 모니터링 허브</h2>
+          <p class="showcase-summary">
+            초당 2,000건 이상의 서버 지표와 트래픽 이벤트를 지연 없이 수집하여 시각화하는 B2B 실시간 대시보드 플랫폼입니다.
+          </p>
+          <ul class="showcase-highlights">
+            <li>Web Worker를 통한 데이터 파싱 연산 분리로 메인 UI 스레드 60fps 보장 (Frame Drop 0건)</li>
+            <li>HTML5 Canvas 기반 가상화 차트 렌더러를 자체 제작하여 50,000개 데이터 포인트 렌더링 시간 72% 단축</li>
+            <li>WebSocket 지수 백오프(Exponential Backoff) 재연결 및 인메모리 버퍼링으로 네트워크 단절 복원력 확보</li>
+          </ul>
+          <div class="showcase-tech">
+            <span>TypeScript</span>
+            <span>React</span>
+            <span>Canvas API</span>
+            <span>Web Worker</span>
+            <span>FastAPI</span>
+            <span>WebSocket</span>
+            <span>Redis</span>
+          </div>
+          <div class="showcase-links">
+            <a href="https://github.com/dokhaknote99" target="_blank" rel="noopener" class="showcase-link">GitHub 저장소</a>
+            <a href="#" class="showcase-link">기술 아키텍처 문서</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- 프로젝트 2: DevNotes Engine (지그재그 반전 배치) -->
+      <article class="showcase-card reverse">
+        <div class="showcase-media">
+          <img src="images/project-devnotes.jpg" alt="DevNotes 마크다운 문서 허브 스크린샷" loading="lazy">
+        </div>
+        <div class="showcase-content">
+          <div class="showcase-meta">
+            <span>개인 프로젝트 · Web Architecture</span>
+            <span class="showcase-period">2024.11 — 2025.02</span>
+          </div>
+          <h2 class="showcase-title">DevNotes — Wasm 기반 고속 전문 검색 문서 허브</h2>
+          <p class="showcase-summary">
+            엔지니어링 지식을 구조화하고 네트워크 요청 없이 브라우저 단에서 수천 개 문서를 3ms 이내에 즉시 검색하는 기술 문서 아카이브입니다.
+          </p>
+          <ul class="showcase-highlights">
+            <li>Rust 기반 WebAssembly(Wasm) 클라이언트 인덱싱 검색 엔진 연동으로 서버 부하 0% 및 즉시 검색 구현</li>
+            <li>Markdown AST(추상 구문 트리) 파싱을 통해 실시간 목차(TOC) 추출 및 스크롤 스파이(ScrollSpy) 네비게이션 적용</li>
+            <li>코드 블록 자동 신택스 하이라이팅, 원클릭 스니펫 복사 및 반응형 모바일 읽기 모드 지원</li>
+          </ul>
+          <div class="showcase-tech">
+            <span>Next.js</span>
+            <span>TypeScript</span>
+            <span>WebAssembly</span>
+            <span>Rust</span>
+            <span>MDX</span>
+            <span>TailwindCSS</span>
+          </div>
+          <div class="showcase-links">
+            <a href="https://github.com/dokhaknote99" target="_blank" rel="noopener" class="showcase-link">GitHub 저장소</a>
+            <a href="#" class="showcase-link">라이브 데모</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- 프로젝트 3: Dokhak Note Portfolio -->
+      <article class="showcase-card">
+        <div class="showcase-media">
+          <img src="images/background.jpg" alt="바닐라 JS 시네마틱 포트폴리오 메인 배경" loading="lazy">
+        </div>
+        <div class="showcase-content">
+          <div class="showcase-meta">
+            <span>개인 프로젝트 · Vanilla Web &amp; UX</span>
+            <span class="showcase-period">2026.01 — 2026.03</span>
+          </div>
+          <h2 class="showcase-title">Dokhak Portfolio — 제로 디펜던시 인터랙티브 웹</h2>
+          <p class="showcase-summary">
+            무거운 프레임워크나 번들러 없이 순수 HTML5, CSS3, Vanilla JavaScript만으로 구축한 초경량 시네마틱 포트폴리오 웹사이트입니다.
+          </p>
+          <ul class="showcase-highlights">
+            <li>전용 GPU 가속 오버레이 레이어 기반 0.4초 시네마틱 페이드아웃/페이드인 전환 엔진 자체 구현 (화면 깜빡임 제로)</li>
+            <li>requestAnimationFrame 정밀 타이머를 통한 무결점 배경 비디오 루프 엔진 및 브라우저 bfcache 복원 지원</li>
+            <li>외부 번들 의존성 0개, 번들 크기 20KB 미만으로 Google Lighthouse 성능 지표 99점 달성</li>
+          </ul>
+          <div class="showcase-tech">
+            <span>Vanilla JS</span>
+            <span>Modern CSS</span>
+            <span>HTML5 Video API</span>
+            <span>GitHub Pages</span>
+            <span>Core Web Vitals</span>
+          </div>
+          <div class="showcase-links">
+            <a href="https://github.com/dokhaknote99" target="_blank" rel="noopener" class="showcase-link">GitHub 저장소</a>
+            <a href="index.html" class="showcase-link">홈 화면 체험</a>
+          </div>
+        </div>
+      </article>
+
+    </div>
   </main>
 
   <!-- 푸터 -->
@@ -43,7 +147,7 @@
     <p>&copy; 2026 dokhaknote99. All rights reserved.</p>
   </footer>
 
-  <script src="js/main.js?v=9"></script>
+  <script src="js/main.js?v=11"></script>
 
 </body>
 </html>
