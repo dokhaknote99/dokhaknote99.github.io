@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-
   // 내부 링크 클릭 시 2번 (Slide & Rise) 전환 효과
   const links = document.querySelectorAll("a[href]");
 
@@ -43,21 +42,22 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 화면이 위로 살짝 올라가며 페이드아웃 (Slide Out)
+      // 2번 퇴장 모션: 화면이 위로 40px 슥 올라가며 페이드아웃
       e.preventDefault();
-      document.body.classList.add("page-exit");
+      document.body.classList.add("page-slide-exit");
 
       setTimeout(() => {
         window.location.href = href;
-      }, 300);
+      }, 350);
     });
   });
 
   // 브라우저 뒤로가기(bfcache) 복귀 시 화면 복원
   window.addEventListener("pageshow", (event) => {
-    if (event.persisted || document.body.classList.contains("page-exit")) {
-      document.body.classList.remove("page-exit");
+    if (event.persisted || document.body.classList.contains("page-slide-exit")) {
+      document.body.classList.remove("page-slide-exit");
     }
   });
 });
+
 

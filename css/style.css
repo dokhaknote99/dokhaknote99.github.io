@@ -30,25 +30,29 @@ body {
   display: flex;
   flex-direction: column;
   opacity: 0;
-  animation: pageSlideRiseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  animation: pageRiseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
-@keyframes pageSlideRiseIn {
-  from {
+/* 2번 등장 모션: 아래에서 위로 40px 살포시 떠오르며 안착 */
+@keyframes pageRiseIn {
+  0% {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(40px);
   }
-  to {
+  100% {
     opacity: 1;
-    transform: none;
+    transform: translateY(0);
   }
 }
 
-body.page-exit {
+/* 2번 퇴장 모션: 위로 40px 슥 올라가며 사라짐 */
+body.page-slide-exit {
   opacity: 0 !important;
-  transform: translateY(-20px) !important;
+  transform: translateY(-40px) !important;
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
 }
+
 
 
 /* ==========================================================================
@@ -176,8 +180,8 @@ body.home-page {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
   height: 100vh;
+
   overflow: hidden;
   display: flex;
   flex-direction: column;
