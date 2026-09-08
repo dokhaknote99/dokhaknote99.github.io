@@ -1,10 +1,10 @@
-// game.js - Top-Down 2D Racing Game Engine (Turbo Apex)
+// game.js - Vertical Scrolling Highway Curve & Obstacle Racer (Apex Highway)
 
 (function () {
   "use strict";
 
   // ==========================================================================
-  // 1. 오디오 합성 엔진 (Web Audio API - 무결점 프로시저 사운드)
+  // 1. 프로시저 오디오 신디사이저 (Web Audio API)
   // ==========================================================================
   class SoundEngine {
     constructor() {
@@ -12,8 +12,10 @@
       this.muted = false;
       this.engineOsc = null;
       this.engineGain = null;
-      this.tireGain = null;
-      this.tireFilter = null;
+      this.skidGain = null;
+      this.skidFilter = null;
+      this.nitroGain = null;
+      this.nitroFilter = null;
       this.initialized = false;
     }
 
@@ -24,14 +26,14 @@
         if (!AudioCtx) return;
         this.ctx = new AudioCtx();
 
-        // 엔진 소음 신디사이저 (Sawtooth + LowPass Filter)
+        // 1) 엔진 사운드 (Sawtooth + Lowpass)
         this.engineOsc = this.ctx.createOscillator();
         this.engineOsc.type = "sawtooth";
-        this.engineOsc.frequency.setValueAtTime(45, this.ctx.currentTime);
+        this.engineOsc.frequency.setValueAtTime(50, this.ctx.currentTime);
 
         const filter = this.ctx.createBiquadFilter();
         filter.type = "lowpass";
-        filter.frequency.setValueAtTime(280, this.ctx.currentTime);
+        filter.frequency.setValueAtTime(320, this.ctx.currentTime);
 
         this.engineGain = this.ctx.createGain();
         this.engineGain.gain.setValueAtTime(0.04, this.ctx.currentTime);
@@ -41,7 +43,7 @@
         this.engineGain.connect(this.ctx.destination);
         this.engineOsc.start();
 
-        // 타이어 스키드 소음 (White Noise + Bandpass Filter)
+        // 2) 타이어 스키드 사운드 (White Noise Buffer)
         const bufferSize = this.ctx.sampleRate * 1;
         const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
         const output = noiseBuffer.getChannelData(0);
@@ -53,17 +55,17 @@
         whiteNoise.buffer = noiseBuffer;
         whiteNoise.loop = true;
 
-        this.tireFilter = this.ctx.createBiquadFilter();
-        this.tireFilter.type = "bandpass";
-        this.tireFilter.frequency.setValueAtTime(1100, this.ctx.currentTime);
-        this.tireFilter.Q.setValueAtTime(3, this.ctx.currentTime);
+        this.skidFilter = this.ctx.createBiquadFilter();
+        this.skidFilter.type = "bandpass";
+        this.skidFilter.frequency.setValueAtTime(1200, this.ctx.currentTime);
+        this.skidFilter.Q.setValueAtTime(2.5, this.ctx.currentTime);
 
-        this.tireGain = this.ctx.createGain();
-        this.tireGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        this.skidGain = this.ctx.createGain();
+        this.skidGain.gain.setValueAtTime(0, this.ctx.currentTime);
 
-        whiteNoise.connect(this.tireFilter);
-        this.tireFilter.connect(this.tireGain);
-        this.tireGain.connect(this.ctx.destination);
+        whiteNoise.connect(this.skidFilter);
+        this.skidFilter.connect(this.skidGain);
+        this.skidGain.connect(this.ctx.destination);
         whiteNoise.start();
 
         this.initialized = true;
@@ -72,66 +74,98 @@
       }
     }
 
-    updateEngine(speedRatio) {
+    updateEngine(speedKmH, isBoosting) {
       if (!this.initialized || this.muted) return;
       if (this.ctx.state === "suspended") this.ctx.resume();
-      const targetFreq = 45 + speedRatio * 110;
-      this.engineOsc.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.05);
-      const targetGain = 0.03 + speedRatio * 0.06;
+
+      // 속도(0 ~ 260)에 비례하는 엔진 RPM 피치
+      const baseFreq = 48 + (speedKmH / 260) * 110 + (isBoosting ? 35 : 0);
+      this.engineOsc.frequency.setTargetAtTime(baseFreq, this.ctx.currentTime, 0.05);
+
+      const targetGain = 0.035 + (speedKmH / 260) * 0.04 + (isBoosting ? 0.025 : 0);
       this.engineGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.05);
     }
 
-    setSkid(intensity) {
+    setSkid(active) {
       if (!this.initialized || this.muted) return;
-      const targetGain = Math.min(0.12, intensity * 0.12);
-      this.tireGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.04);
+      const targetGain = active ? 0.1 : 0;
+      this.skidGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.04);
     }
 
-    playDing() {
+    playCrash() {
       if (!this.initialized || this.muted) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(587.33, this.ctx.currentTime); // D5
-      osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.15); // A5
-      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.35);
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.35);
+
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.4);
+      } catch (e) {}
+    }
+
+    playCoin() {
+      if (!this.initialized || this.muted) return;
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(987.77, this.ctx.currentTime); // B5
+        osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime + 0.08); // E6
+
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.3);
+      } catch (e) {}
     }
 
     playBoost() {
       if (!this.initialized || this.muted) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(220, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.4);
-      gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.5);
-    }
-
-    playFanfare() {
-      if (!this.initialized || this.muted) return;
-      const notes = [523.25, 659.25, 783.99, 1046.5]; // C E G C
-      notes.forEach((freq, idx) => {
+      try {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.12);
-        gain.gain.setValueAtTime(0.15, this.ctx.currentTime + idx * 0.12);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.12 + 0.4);
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(260, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(780, this.ctx.currentTime + 0.3);
+
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        osc.start(this.ctx.currentTime + idx * 0.12);
-        osc.stop(this.ctx.currentTime + idx * 0.12 + 0.4);
-      });
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.4);
+      } catch (e) {}
+    }
+
+    playGameOver() {
+      if (!this.initialized || this.muted) return;
+      try {
+        const notes = [392.0, 349.23, 329.63, 293.66]; // G4, F4, E4, D4
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.18);
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.18);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.18 + 0.35);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + idx * 0.18);
+          osc.stop(this.ctx.currentTime + idx * 0.18 + 0.35);
+        });
+      } catch (e) {}
     }
 
     toggleMute() {
@@ -139,92 +173,29 @@
       if (this.engineGain) {
         this.engineGain.gain.setValueAtTime(this.muted ? 0 : 0.04, this.ctx ? this.ctx.currentTime : 0);
       }
-      if (this.tireGain) {
-        this.tireGain.gain.setValueAtTime(0, this.ctx ? this.ctx.currentTime : 0);
+      if (this.skidGain) {
+        this.skidGain.gain.setValueAtTime(0, this.ctx ? this.ctx.currentTime : 0);
       }
       return this.muted;
     }
   }
 
   // ==========================================================================
-  // 2. 레이싱 서킷 트랙 정의 (Closed Circuit Track)
+  // 2. 수직 고속도로 커브 & 레이서 메인 클래스 (Apex Highway)
   // ==========================================================================
-  const TRACK_WIDTH = 110;
-  const WAYPOINTS = [
-    { x: 300, y: 150 }, // 스타트 직선
-    { x: 620, y: 150 },
-    { x: 880, y: 160 },
-    { x: 1040, y: 240 }, // 코너 1 (우측 고속 커브)
-    { x: 1060, y: 400 },
-    { x: 960, y: 550 },  // 코너 2 (헤어핀 유도)
-    { x: 780, y: 590 },
-    { x: 680, y: 480 },  // 시케인 S자 커브
-    { x: 570, y: 430 },
-    { x: 480, y: 520 },
-    { x: 440, y: 620 },
-    { x: 260, y: 630 },  // 서안 커브
-    { x: 140, y: 520 },
-    { x: 130, y: 320 },
-    { x: 180, y: 200 },
-  ];
-
-  // 부스트 존 (직선 주로에 배치된 황금 부스트 패드)
-  const BOOST_PADS = [
-    { x: 500, y: 150, angle: 0 },
-    { x: 190, y: 420, angle: -Math.PI / 2 }
-  ];
-
-  // ==========================================================================
-  // 3. 헬퍼 수학 함수 (거리, 각도, 보간)
-  // ==========================================================================
-  function distSq(x1, y1, x2, y2) {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    return dx * dx + dy * dy;
-  }
-
-  function distToSegment(px, py, x1, y1, x2, y2) {
-    const l2 = distSq(x1, y1, x2, y2);
-    if (l2 === 0) return Math.sqrt(distSq(px, py, x1, y1));
-    let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
-    t = Math.max(0, Math.min(1, t));
-    return Math.sqrt(distSq(px, py, x1 + t * (x2 - x1), y1 + t * (y2 - y1)));
-  }
-
-  function isOnTrack(x, y) {
-    const n = WAYPOINTS.length;
-    let minDist = 999999;
-    for (let i = 0; i < n; i++) {
-      const p1 = WAYPOINTS[i];
-      const p2 = WAYPOINTS[(i + 1) % n];
-      const d = distToSegment(x, y, p1.x, p1.y, p2.x, p2.y);
-      if (d < minDist) minDist = d;
-    }
-    return minDist <= TRACK_WIDTH / 2;
-  }
-
-  // ==========================================================================
-  // 4. 메인 게임 클래스
-  // ==========================================================================
-  class TurboApexGame {
+  class ApexHighwayGame {
     constructor() {
       this.canvas = document.getElementById("gameCanvas");
       this.ctx = this.canvas.getContext("2d");
 
-      // 스키드마크 캔버스 (영구 보존 레이어)
-      this.skidCanvas = document.createElement("canvas");
-      this.skidCanvas.width = this.canvas.width;
-      this.skidCanvas.height = this.canvas.height;
-      this.skidCtx = this.skidCanvas.getContext("2d");
-
-      // 오디오
+      // 오디오 신디사이저
       this.sound = new SoundEngine();
 
-      // 스프라이트 이미지 로드
+      // 차량 스프라이트
       this.playerImg = new Image();
       this.playerImg.src = "images/car-red.png";
-      this.rivalImg = new Image();
-      this.rivalImg.src = "images/car-yellow.png";
+      this.trafficImg = new Image();
+      this.trafficImg.src = "images/car-yellow.png";
 
       // 키보드 상태
       this.keys = {
@@ -232,56 +203,71 @@
         down: false,
         left: false,
         right: false,
-        handbrake: false
+        boost: false
       };
 
-      // 플레이어 카 물리 상태
+      // 도로 규격
+      this.ROAD_WIDTH = 460;
+      this.LANE_COUNT = 3;
+      this.SEGMENT_LENGTH = 16; // 도로 세그먼트 높이
+
+      // 게임 상태
+      this.gameState = "ready"; // 'ready', 'racing', 'gameover'
+      this.distance = 0; // 주행 누적 거리 (m)
+      this.score = 0; // 점수
+      this.overtakes = 0; // 추월 횟수
+      this.highScore = parseInt(localStorage.getItem("apex_highway_highscore") || "0", 10);
+
+      // 플레이어 차량 물리 상태
       this.player = {
-        x: 240,
-        y: 150,
-        angle: 0,
-        speed: 0,
+        x: this.canvas.width / 2,
+        y: this.canvas.height - 150,
+        width: 44,
+        height: 88,
+        speed: 80, // 현재 속도 (km/h)
+        minSpeed: 40,
+        normalMaxSpeed: 180,
+        boostMaxSpeed: 250,
         vx: 0,
-        vy: 0,
-        boostTime: 0,
-        lap: 1,
-        maxLaps: 3,
-        nextCheckpoint: 1,
-        finished: false,
-        lapStartTime: 0,
-        currentLapTime: 0,
-        bestLapTime: parseFloat(localStorage.getItem("turbo_apex_best_lap") || 0),
-        lapTimes: []
+        tiltAngle: 0, // 좌우 조향 틸팅 (-0.18 ~ +0.18 rad)
+        lives: 3,
+        maxLives: 3,
+        invincibleTimer: 0, // 피격 무적 시간
+        nitro: 100, // 부스트 게이지 (0 ~ 100)
+        isBoosting: false,
+        spinTimer: 0, // 오일 웅덩이 피격 시 스핀
+        onGrass: false
       };
 
-      // 라이벌 AI 카
-      this.rival = {
-        x: 200,
-        y: 180,
-        angle: 0,
-        speed: 0,
-        targetSpeed: 5.6,
-        targetWpIndex: 1,
-        lap: 1
-      };
+      // 게임 엔티티 (트래픽 차량, 장애물, 코인, 아이템)
+      this.entities = [];
+      this.spawnTimer = 0;
 
-      // 파티클 (연기, 부스트 불꽃, 풀먼지)
+      // 파티클 시스템 (배기 연기, 부스트 화염, 스파크, 잔디 파편)
       this.particles = [];
 
-      // 게임 루프 및 UI 타이머
-      this.gameState = "ready";
-      this.countdown = 3;
-      this.countdownTimer = null;
-      this.totalRaceTime = 0;
-      this.raceStartTime = 0;
+      // 화면 진동(Screen Shake)
+      this.shakeIntensity = 0;
 
-      // 입력 바인딩 및 UI 초기화
+      // 플로팅 점수 텍스트 ("+50 OVERTAKE!", "+100 COIN!")
+      this.floatingTexts = [];
+
+      // UI 및 이벤트 초기화
       this.initInput();
       this.initUI();
 
-      // 렌더링 루프 시작
+      // 메인 루프 가동
       this.lastTime = performance.now();
       requestAnimationFrame((t) => this.loop(t));
+    }
+
+    // 도로 중심 곡률 계산 (진행 거리 d와 화면 y 좌표에 따른 곡선 오프셋)
+    getCurveOffset(worldDistance) {
+      // 복합 사인파로 부드럽고 스릴 넘치는 완급 조절의 S자/헤어핀 커브 구현
+      const s1 = Math.sin(worldDistance * 0.0018) * 160;
+      const s2 = Math.sin(worldDistance * 0.0035 + 1.2) * 90;
+      const s3 = Math.cos(worldDistance * 0.0007) * 60;
+      return s1 + s2 + s3;
     }
 
     initInput() {
@@ -291,8 +277,8 @@
         if (["ArrowDown", "KeyS"].includes(e.code)) this.keys.down = true;
         if (["ArrowLeft", "KeyA"].includes(e.code)) this.keys.left = true;
         if (["ArrowRight", "KeyD"].includes(e.code)) this.keys.right = true;
-        if (["Space"].includes(e.code)) {
-          this.keys.handbrake = true;
+        if (e.code === "Space") {
+          this.keys.boost = true;
           e.preventDefault();
         }
       });
@@ -302,36 +288,36 @@
         if (["ArrowDown", "KeyS"].includes(e.code)) this.keys.down = false;
         if (["ArrowLeft", "KeyA"].includes(e.code)) this.keys.left = false;
         if (["ArrowRight", "KeyD"].includes(e.code)) this.keys.right = false;
-        if (["Space"].includes(e.code)) this.keys.handbrake = false;
+        if (e.code === "Space") this.keys.boost = false;
       });
 
-      // 가상 터치 버튼 바인딩
-      const bindTouch = (btnId, keyName) => {
+      // 가상 터치 컨트롤러 바인딩
+      const bindBtn = (btnId, keyName) => {
         const btn = document.getElementById(btnId);
         if (!btn) return;
-        const start = (e) => {
+        const press = (e) => {
           e.preventDefault();
           this.sound.init();
           this.keys[keyName] = true;
           btn.classList.add("active");
         };
-        const end = (e) => {
+        const release = (e) => {
           e.preventDefault();
           this.keys[keyName] = false;
           btn.classList.remove("active");
         };
-        btn.addEventListener("touchstart", start, { passive: false });
-        btn.addEventListener("touchend", end, { passive: false });
-        btn.addEventListener("mousedown", start);
-        btn.addEventListener("mouseup", end);
-        btn.addEventListener("mouseleave", end);
+        btn.addEventListener("touchstart", press, { passive: false });
+        btn.addEventListener("touchend", release, { passive: false });
+        btn.addEventListener("mousedown", press);
+        btn.addEventListener("mouseup", release);
+        btn.addEventListener("mouseleave", release);
       };
 
-      bindTouch("btnGas", "up");
-      bindTouch("btnBrake", "down");
-      bindTouch("btnLeft", "left");
-      bindTouch("btnRight", "right");
-      bindTouch("btnDrift", "handbrake");
+      bindBtn("btnLeft", "left");
+      bindBtn("btnRight", "right");
+      bindBtn("btnGas", "up");
+      bindBtn("btnBrake", "down");
+      bindBtn("btnDrift", "boost");
     }
 
     initUI() {
@@ -340,7 +326,7 @@
       const btnMute = document.getElementById("btnMute");
 
       if (btnStart) {
-        btnStart.addEventListener("click", () => this.startCountdown());
+        btnStart.addEventListener("click", () => this.startGame());
       }
       if (btnRestart) {
         btnRestart.addEventListener("click", () => this.resetGame());
@@ -353,306 +339,452 @@
         });
       }
 
-      this.updateBestLapUI();
+      this.updateHUD();
     }
 
-    startCountdown() {
+    startGame() {
       this.sound.init();
       const overlay = document.getElementById("gameOverlay");
       if (overlay) overlay.style.display = "none";
-      const victoryBox = document.getElementById("victoryModal");
-      if (victoryBox) victoryBox.style.display = "none";
-
-      this.gameState = "countdown";
-      this.countdown = 3;
-      const countEl = document.getElementById("countdownDisplay");
-      if (countEl) {
-        countEl.style.display = "block";
-        countEl.textContent = "3";
-      }
-      this.sound.playDing();
-
-      this.countdownTimer = setInterval(() => {
-        this.countdown--;
-        if (this.countdown > 0) {
-          if (countEl) countEl.textContent = this.countdown;
-          this.sound.playDing();
-        } else if (this.countdown === 0) {
-          if (countEl) countEl.textContent = "GO!";
-          this.sound.playBoost();
-        } else {
-          clearInterval(this.countdownTimer);
-          if (countEl) countEl.style.display = "none";
-          this.gameState = "racing";
-          this.raceStartTime = performance.now();
-          this.player.lapStartTime = performance.now();
-        }
-      }, 800);
-    }
-
-    resetGame() {
-      this.skidCtx.clearRect(0, 0, this.skidCanvas.width, this.skidCanvas.height);
-      this.player.x = 240;
-      this.player.y = 150;
-      this.player.angle = 0;
-      this.player.speed = 0;
-      this.player.vx = 0;
-      this.player.vy = 0;
-      this.player.boostTime = 0;
-      this.player.lap = 1;
-      this.player.nextCheckpoint = 1;
-      this.player.finished = false;
-      this.player.lapTimes = [];
-
-      this.rival.x = 200;
-      this.rival.y = 180;
-      this.rival.angle = 0;
-      this.rival.speed = 0;
-      this.rival.targetWpIndex = 1;
-      this.rival.lap = 1;
-
-      this.particles = [];
       const victoryModal = document.getElementById("victoryModal");
       if (victoryModal) victoryModal.style.display = "none";
 
-      this.startCountdown();
+      this.resetStats();
+      this.gameState = "racing";
+    }
+
+    resetGame() {
+      this.sound.init();
+      const overlay = document.getElementById("gameOverlay");
+      if (overlay) overlay.style.display = "none";
+      const victoryModal = document.getElementById("victoryModal");
+      if (victoryModal) victoryModal.style.display = "none";
+
+      this.resetStats();
+      this.gameState = "racing";
+    }
+
+    resetStats() {
+      this.distance = 0;
+      this.score = 0;
+      this.overtakes = 0;
+      this.entities = [];
+      this.particles = [];
+      this.floatingTexts = [];
+      this.spawnTimer = 0;
+
+      const p = this.player;
+      p.x = this.canvas.width / 2;
+      p.speed = 80;
+      p.vx = 0;
+      p.tiltAngle = 0;
+      p.lives = 3;
+      p.invincibleTimer = 0;
+      p.nitro = 100;
+      p.isBoosting = false;
+      p.spinTimer = 0;
+      p.onGrass = false;
     }
 
     update(dt) {
       if (this.gameState !== "racing") return;
 
-      const now = performance.now();
-      this.player.currentLapTime = (now - this.player.lapStartTime) / 1000;
-      this.totalRaceTime = (now - this.raceStartTime) / 1000;
-
-      // 1. 플레이어 물리 계산
       const p = this.player;
-      const onTrack = isOnTrack(p.x, p.y);
 
-      // 부스트 처리
-      if (p.boostTime > 0) {
-        p.boostTime -= dt;
-      }
-
-      // 부스트 패드 통과 감지
-      for (const b of BOOST_PADS) {
-        if (distSq(p.x, p.y, b.x, b.y) < 1800 && p.boostTime <= 0) {
-          p.boostTime = 1.6;
-          this.sound.playBoost();
-          for (let i = 0; i < 16; i++) {
-            this.particles.push({
-              x: p.x,
-              y: p.y,
-              vx: (Math.random() - 0.5) * 4 - Math.cos(p.angle) * 5,
-              vy: (Math.random() - 0.5) * 4 - Math.sin(p.angle) * 5,
-              life: 1.0,
-              color: "#fbbf24",
-              size: Math.random() * 5 + 3
-            });
-          }
-        }
-      }
-
-      let maxSpeed = p.boostTime > 0 ? 9.5 : 7.2;
-      let accel = 0.22;
-      let friction = 0.985;
-
-      // 잔디밭 진입 시 감속 패널티
-      if (!onTrack) {
-        maxSpeed = 2.4;
-        friction = 0.92;
-        if (Math.abs(p.speed) > 1.0 && Math.random() < 0.4) {
-          this.particles.push({
-            x: p.x + (Math.random() - 0.5) * 16,
-            y: p.y + (Math.random() - 0.5) * 16,
-            vx: (Math.random() - 0.5) * 1.5,
-            vy: (Math.random() - 0.5) * 1.5,
-            life: 0.6,
-            color: "#65a30d",
-            size: Math.random() * 4 + 2
-          });
-        }
-      }
-
-      // 가속 및 후진
-      if (this.keys.up) {
-        p.speed += accel;
-      } else if (this.keys.down) {
-        p.speed -= accel * 0.8;
+      // 1. 니트로 부스트 판단
+      if (this.keys.boost && p.nitro > 0) {
+        p.isBoosting = true;
+        p.nitro = Math.max(0, p.nitro - dt * 28);
+        this.shakeIntensity = Math.max(this.shakeIntensity, 3);
+        if (Math.random() < 0.6) this.sound.playBoost();
       } else {
-        p.speed *= friction;
+        p.isBoosting = false;
+        // 비가속 시 서서히 니트로 자연 충전
+        p.nitro = Math.min(100, p.nitro + dt * 6);
       }
 
-      p.speed = Math.max(-2.5, Math.min(maxSpeed, p.speed));
-
-      // 핸들링 & 조향
-      const speedFactor = Math.min(1.0, Math.abs(p.speed) / 3.0);
-      let steerAngle = 0.052 * speedFactor;
-
-      if (this.keys.handbrake) {
-        steerAngle *= 1.4;
-        p.speed *= 0.97;
+      // 2. 속도 가감속 물리
+      let targetMaxSpeed = p.isBoosting ? p.boostMaxSpeed : p.normalMaxSpeed;
+      if (p.onGrass) {
+        targetMaxSpeed = 45; // 잔디밭 감속 패널티
       }
 
-      if (this.keys.left) p.angle -= steerAngle;
-      if (this.keys.right) p.angle += steerAngle;
+      if (this.keys.up) {
+        p.speed += (p.isBoosting ? 140 : 85) * dt;
+      } else if (this.keys.down) {
+        p.speed -= 160 * dt;
+      } else {
+        // 자연 감속 / 관성
+        if (p.speed > targetMaxSpeed) {
+          p.speed -= 100 * dt;
+        } else if (p.speed < 70 && !p.onGrass) {
+          p.speed += 30 * dt;
+        }
+      }
 
-      const forwardX = Math.cos(p.angle);
-      const forwardY = Math.sin(p.angle);
+      p.speed = Math.max(p.minSpeed, Math.min(targetMaxSpeed, p.speed));
 
-      // 관성 드리프트 혼합
-      const driftGrip = this.keys.handbrake ? 0.78 : (onTrack ? 0.92 : 0.84);
-      p.vx = p.vx * (1 - driftGrip) + forwardX * p.speed * driftGrip;
-      p.vy = p.vy * (1 - driftGrip) + forwardY * p.speed * driftGrip;
+      // 3. 주행 거리 및 점수 증가
+      const speedMps = (p.speed * 1000) / 3600; // m/s
+      const movedMeters = speedMps * dt;
+      this.distance += movedMeters;
+      this.score += Math.round(movedMeters * (p.isBoosting ? 2.5 : 1));
 
+      // 4. 좌우 조향 및 틸팅 물리
+      let steerInput = 0;
+      if (this.keys.left) steerInput -= 1;
+      if (this.keys.right) steerInput += 1;
+
+      // 오일 피격 시 통제 불가 스핀
+      if (p.spinTimer > 0) {
+        p.spinTimer -= dt;
+        steerInput = Math.sin(p.spinTimer * 16) * 1.8;
+      }
+
+      const steerPower = 480 * (p.speed / 120);
+      p.vx = p.vx * 0.82 + steerInput * steerPower * dt;
       p.x += p.vx;
-      p.y += p.vy;
 
-      p.x = Math.max(30, Math.min(this.canvas.width - 30, p.x));
-      p.y = Math.max(30, Math.min(this.canvas.height - 30, p.y));
+      // 차량 틸팅 각도 보간 (-0.18 ~ +0.18 rad)
+      const targetTilt = steerInput * 0.15;
+      p.tiltAngle = p.tiltAngle * 0.8 + targetTilt * 0.2;
 
-      const lateralVel = Math.abs(p.vx * -forwardY + p.vy * forwardX);
-      const isDrifting = (lateralVel > 1.2 && Math.abs(p.speed) > 3.0) || this.keys.handbrake;
+      // 도로 중심선 및 도로 이탈(Grass) 판정
+      const currentRoadCenter = this.canvas.width / 2 + this.getCurveOffset(this.distance);
+      const roadLeft = currentRoadCenter - this.ROAD_WIDTH / 2;
+      const roadRight = currentRoadCenter + this.ROAD_WIDTH / 2;
 
-      if (isDrifting && onTrack) {
-        this.sound.setSkid(lateralVel / 3.0);
-
-        this.skidCtx.fillStyle = "rgba(15, 23, 42, 0.12)";
-        const backOffset = 18;
-        const sideOffset = 10;
-        const cos = Math.cos(p.angle);
-        const sin = Math.sin(p.angle);
-
-        const t1x = p.x - cos * backOffset - sin * sideOffset;
-        const t1y = p.y - sin * backOffset + cos * sideOffset;
-        const t2x = p.x - cos * backOffset + sin * sideOffset;
-        const t2y = p.y - sin * backOffset - cos * sideOffset;
-
-        this.skidCtx.beginPath();
-        this.skidCtx.arc(t1x, t1y, 3, 0, Math.PI * 2);
-        this.skidCtx.arc(t2x, t2y, 3, 0, Math.PI * 2);
-        this.skidCtx.fill();
-
+      if (p.x < roadLeft + 20 || p.x > roadRight - 20) {
+        p.onGrass = true;
+        this.shakeIntensity = Math.max(this.shakeIntensity, 2);
+        // 잔디 먼지 및 스파크 파티클 방출
         if (Math.random() < 0.6) {
           this.particles.push({
-            x: t1x,
-            y: t1y,
-            vx: (Math.random() - 0.5) * 1.5,
-            vy: (Math.random() - 0.5) * 1.5,
-            life: 0.5,
-            color: "rgba(255, 255, 255, 0.6)",
-            size: Math.random() * 6 + 3
+            x: p.x + (Math.random() - 0.5) * 20,
+            y: p.y + p.height / 2,
+            vx: (Math.random() - 0.5) * 80,
+            vy: Math.random() * 80 + 40,
+            life: 0.4,
+            color: p.x < roadLeft ? "#4ade80" : "#fbbf24",
+            size: Math.random() * 5 + 3
           });
         }
       } else {
-        this.sound.setSkid(0);
+        p.onGrass = false;
       }
 
-      this.sound.updateEngine(Math.abs(p.speed) / 8.0);
-      this.checkPlayerCheckpoints();
-      this.updateRival(dt);
+      // 화면 경계 제한
+      p.x = Math.max(40, Math.min(this.canvas.width - 40, p.x));
 
+      // 5. 무적 타이머
+      if (p.invincibleTimer > 0) {
+        p.invincibleTimer -= dt;
+      }
+
+      // 6. 배기 및 부스트 화염 파티클
+      if (p.isBoosting) {
+        for (let k = 0; k < 3; k++) {
+          this.particles.push({
+            x: p.x + (Math.random() - 0.5) * 14,
+            y: p.y + p.height / 2 + 5,
+            vx: (Math.random() - 0.5) * 30,
+            vy: Math.random() * 120 + 80,
+            life: 0.35,
+            color: Math.random() < 0.5 ? "#38bdf8" : "#f97316",
+            size: Math.random() * 7 + 4
+          });
+        }
+      } else if (p.speed > 100 && Math.random() < 0.4) {
+        this.particles.push({
+          x: p.x + (Math.random() - 0.5) * 12,
+          y: p.y + p.height / 2 + 5,
+          vx: (Math.random() - 0.5) * 20,
+          vy: Math.random() * 50 + 30,
+          life: 0.25,
+          color: "rgba(255, 255, 255, 0.4)",
+          size: Math.random() * 4 + 2
+        });
+      }
+
+      // 7. 엔티티 스폰 (트래픽 차량, 바리케이드, 오일 슬릭, 코인)
+      this.spawnTimer += dt;
+      const spawnInterval = Math.max(0.65, 1.6 - (this.distance / 5000) * 0.6);
+      if (this.spawnTimer >= spawnInterval) {
+        this.spawnTimer = 0;
+        this.spawnEntity();
+      }
+
+      // 8. 엔티티 이동 및 충돌 판정
+      this.updateEntities(dt, movedMeters);
+
+      // 9. 파티클 업데이트
       for (let i = this.particles.length - 1; i >= 0; i--) {
         const pt = this.particles[i];
-        pt.x += pt.vx;
-        pt.y += pt.vy;
-        pt.life -= dt * 1.8;
-        if (pt.life <= 0) {
-          this.particles.splice(i, 1);
-        }
+        pt.x += pt.vx * dt;
+        pt.y += pt.vy * dt;
+        pt.life -= dt;
+        if (pt.life <= 0) this.particles.splice(i, 1);
       }
 
+      // 10. 플로팅 텍스트 업데이트
+      for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+        const ft = this.floatingTexts[i];
+        ft.y -= 45 * dt;
+        ft.life -= dt;
+        if (ft.life <= 0) this.floatingTexts.splice(i, 1);
+      }
+
+      // 11. 화면 진동 감쇠
+      if (this.shakeIntensity > 0) {
+        this.shakeIntensity = Math.max(0, this.shakeIntensity - dt * 10);
+      }
+
+      // 12. 사운드 업데이트
+      this.sound.updateEngine(p.speed, p.isBoosting);
+      this.sound.setSkid(p.spinTimer > 0 || Math.abs(p.vx) > 3.5);
+
+      // 13. HUD 업데이트
       this.updateHUD();
     }
 
-    checkPlayerCheckpoints() {
+    spawnEntity() {
+      // 3개 레인 중 무작위 1개 선택
+      const laneIndex = Math.floor(Math.random() * this.LANE_COUNT);
+      const laneWidth = this.ROAD_WIDTH / this.LANE_COUNT;
+      const laneOffsetX = (laneIndex - 1) * laneWidth;
+
+      // 스폰 지점에서의 도로 중심
+      const spawnDistance = this.distance + 800;
+      const spawnCurve = this.getCurveOffset(spawnDistance);
+      const spawnX = this.canvas.width / 2 + spawnCurve + laneOffsetX;
+
+      const rand = Math.random();
+
+      if (rand < 0.45) {
+        // [트래픽 일반 주행 차량]
+        const trafficSpeed = Math.floor(Math.random() * 50) + 60; // 60 ~ 110 km/h
+        this.entities.push({
+          type: "traffic",
+          x: spawnX,
+          y: -120,
+          width: 44,
+          height: 86,
+          speed: trafficSpeed,
+          laneOffsetX: laneOffsetX,
+          worldDist: spawnDistance,
+          passed: false
+        });
+      } else if (rand < 0.65) {
+        // [도로 공사 바리케이드]
+        this.entities.push({
+          type: "barrier",
+          x: spawnX,
+          y: -80,
+          width: 52,
+          height: 32,
+          speed: 0,
+          laneOffsetX: laneOffsetX,
+          worldDist: spawnDistance,
+          passed: false
+        });
+      } else if (rand < 0.8) {
+        // [오일 슬릭 (미끄러짐 웅덩이)]
+        this.entities.push({
+          type: "oil",
+          x: spawnX,
+          y: -60,
+          width: 48,
+          height: 36,
+          speed: 0,
+          laneOffsetX: laneOffsetX,
+          worldDist: spawnDistance,
+          passed: false
+        });
+      } else {
+        // [황금 코인 또는 니트로 아이템]
+        const isNitro = Math.random() < 0.25;
+        this.entities.push({
+          type: isNitro ? "nitro" : "coin",
+          x: spawnX,
+          y: -50,
+          width: 32,
+          height: 32,
+          speed: 0,
+          laneOffsetX: laneOffsetX,
+          worldDist: spawnDistance,
+          passed: false
+        });
+      }
+    }
+
+    updateEntities(dt, movedMeters) {
       const p = this.player;
-      const targetWp = WAYPOINTS[p.nextCheckpoint];
-      if (!targetWp) return;
 
-      if (distSq(p.x, p.y, targetWp.x, targetWp.y) < 6400) {
-        p.nextCheckpoint = (p.nextCheckpoint + 1) % WAYPOINTS.length;
+      for (let i = this.entities.length - 1; i >= 0; i--) {
+        const ent = this.entities[i];
 
-        if (p.nextCheckpoint === 1) {
-          const finishedLapTime = p.currentLapTime;
-          p.lapTimes.push(finishedLapTime);
-          this.sound.playDing();
+        // 상대 속도 계산: (플레이어 속도 - 엔티티 자체 속도)
+        const relSpeedKmh = p.speed - ent.speed;
+        const relSpeedPx = (relSpeedKmh * 1000 / 3600) * 8.5; // 화면 픽셀 스케일
+        ent.y += relSpeedPx * dt;
 
-          if (p.bestLapTime === 0 || finishedLapTime < p.bestLapTime) {
-            p.bestLapTime = finishedLapTime;
-            localStorage.setItem("turbo_apex_best_lap", p.bestLapTime.toFixed(2));
-            this.updateBestLapUI();
+        // 도로 커브를 따라 엔티티의 X 위치를 곡선에 동기화
+        const entCurve = this.getCurveOffset(this.distance + (this.canvas.height - ent.y) * 0.8);
+        ent.x = this.canvas.width / 2 + entCurve + ent.laneOffsetX;
+
+        // 1) 추월 판정 (트래픽 차량/장애물을 스치듯 지나갔을 때 보너스)
+        if (!ent.passed && ent.y > p.y + p.height / 2) {
+          ent.passed = true;
+          if (ent.type === "traffic") {
+            this.overtakes++;
+            this.score += 50;
+            this.addFloatingText(ent.x, p.y - 20, "+50 추월!", "#38bdf8");
           }
+        }
 
-          if (p.lap < p.maxLaps) {
-            p.lap++;
-            p.lapStartTime = performance.now();
-          } else {
-            p.finished = true;
-            this.gameState = "finished";
-            this.sound.playFanfare();
-            this.showVictoryModal();
+        // 2) 플레이어와의 충돌 감지 (AABB 히트박스)
+        if (this.checkCollision(p, ent)) {
+          if (ent.type === "coin") {
+            this.score += 100;
+            this.sound.playCoin();
+            this.addFloatingText(p.x, p.y - 30, "+100 COIN!", "#facc15");
+            this.entities.splice(i, 1);
+            continue;
+          } else if (ent.type === "nitro") {
+            p.nitro = Math.min(100, p.nitro + 45);
+            this.sound.playBoost();
+            this.addFloatingText(p.x, p.y - 30, "⚡ NITRO +45%", "#38bdf8");
+            this.entities.splice(i, 1);
+            continue;
+          } else if (ent.type === "oil") {
+            p.spinTimer = 0.85;
+            this.sound.setSkid(true);
+            this.shakeIntensity = 4;
+            this.addFloatingText(p.x, p.y - 20, "⚠️ SLIP!", "#f87171");
+            this.entities.splice(i, 1);
+            continue;
+          } else if (ent.type === "traffic" || ent.type === "barrier") {
+            // 무적 상태가 아닐 때만 피격 데미지 적용
+            if (p.invincibleTimer <= 0) {
+              p.lives--;
+              p.invincibleTimer = 1.8; // 1.8초간 무적 점멸
+              p.speed = Math.max(40, p.speed * 0.55); // 충돌 시 급감속
+              this.shakeIntensity = 9; // 강한 화면 진동
+              this.sound.playCrash();
+
+              // 충돌 스파크 파티클 폭발
+              for (let k = 0; k < 20; k++) {
+                this.particles.push({
+                  x: p.x + (Math.random() - 0.5) * 30,
+                  y: p.y,
+                  vx: (Math.random() - 0.5) * 220,
+                  vy: (Math.random() - 0.5) * 220,
+                  life: 0.6,
+                  color: Math.random() < 0.5 ? "#f97316" : "#facc15",
+                  size: Math.random() * 6 + 3
+                });
+              }
+
+              this.addFloatingText(p.x, p.y - 40, "CRASH! -1 ❤️", "#ef4444");
+
+              // 하트 소진 시 게임오버
+              if (p.lives <= 0) {
+                this.triggerGameOver();
+                return;
+              }
+            }
           }
+        }
+
+        // 화면 아래로 벗어난 엔티티 제거
+        if (ent.y > this.canvas.height + 150) {
+          this.entities.splice(i, 1);
         }
       }
     }
 
-    updateRival(dt) {
-      const r = this.rival;
-      const targetWp = WAYPOINTS[r.targetWpIndex];
-      const dx = targetWp.x - r.x;
-      const dy = targetWp.y - r.y;
-      const targetAngle = Math.atan2(dy, dx);
+    checkCollision(a, b) {
+      const padX = 10;
+      const padY = 8;
+      return (
+        a.x - a.width / 2 + padX < b.x + b.width / 2 - padX &&
+        a.x + a.width / 2 - padX > b.x - b.width / 2 + padX &&
+        a.y - a.height / 2 + padY < b.y + b.height / 2 - padY &&
+        a.y + a.height / 2 - padY > b.y - b.height / 2 + padY
+      );
+    }
 
-      let angleDiff = targetAngle - r.angle;
-      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-      r.angle += angleDiff * 0.08;
+    addFloatingText(x, y, text, color) {
+      this.floatingTexts.push({
+        x: x,
+        y: y,
+        text: text,
+        color: color,
+        life: 0.9
+      });
+    }
 
-      if (r.speed < r.targetSpeed) r.speed += 0.08;
-      r.x += Math.cos(r.angle) * r.speed;
-      r.y += Math.sin(r.angle) * r.speed;
+    triggerGameOver() {
+      this.gameState = "gameover";
+      this.sound.playGameOver();
+      this.shakeIntensity = 12;
 
-      if (distSq(r.x, r.y, targetWp.x, targetWp.y) < 3600) {
-        r.targetWpIndex = (r.targetWpIndex + 1) % WAYPOINTS.length;
-        if (r.targetWpIndex === 1) {
-          r.lap++;
-        }
+      // 하이스코어 갱신 체크
+      let isNewRecord = false;
+      if (this.score > this.highScore) {
+        this.highScore = this.score;
+        localStorage.setItem("apex_highway_highscore", this.highScore.toString());
+        isNewRecord = true;
+      }
+
+      // 모달 팝업 표출
+      const modal = document.getElementById("victoryModal");
+      const summary = document.getElementById("victorySummary");
+      if (modal && summary) {
+        const titleEl = modal.querySelector(".victory-title");
+        if (titleEl) titleEl.textContent = "💥 GAME OVER";
+
+        summary.innerHTML = `
+          <div class="result-rank">${isNewRecord ? "🏆 새로운 최고 기록 달성!" : "고속도로 레이스 종료"}</div>
+          <div class="result-item"><span>최종 점수:</span> <strong>${this.score.toLocaleString()} 점</strong></div>
+          <div class="result-item"><span>총 주행 거리:</span> <strong>${Math.floor(this.distance).toLocaleString()} m</strong></div>
+          <div class="result-item"><span>추월한 차량:</span> <strong>${this.overtakes} 대</strong></div>
+          <div class="result-item"><span>최고 기록:</span> <strong style="color: #38bdf8;">${this.highScore.toLocaleString()} 점</strong></div>
+        `;
+        modal.style.display = "flex";
       }
     }
 
     updateHUD() {
       const p = this.player;
-      const speedKmH = Math.round(Math.abs(p.speed) * 28);
+
       const speedEl = document.getElementById("hudSpeed");
-      if (speedEl) speedEl.textContent = speedKmH;
+      if (speedEl) speedEl.textContent = Math.round(p.speed);
 
-      const lapEl = document.getElementById("hudLap");
-      if (lapEl) lapEl.textContent = `${p.lap} / ${p.maxLaps}`;
+      const distEl = document.getElementById("hudDistance");
+      if (distEl) distEl.textContent = `${Math.floor(this.distance)}m`;
 
-      const timeEl = document.getElementById("hudTime");
-      if (timeEl) timeEl.textContent = p.currentLapTime.toFixed(2) + "s";
-    }
+      const scoreEl = document.getElementById("hudScore");
+      if (scoreEl) scoreEl.textContent = this.score.toLocaleString();
 
-    updateBestLapUI() {
       const bestEl = document.getElementById("hudBestLap");
-      if (bestEl) {
-        bestEl.textContent = this.player.bestLapTime > 0 ? this.player.bestLapTime.toFixed(2) + "s" : "--:--";
+      if (bestEl) bestEl.textContent = this.highScore > 0 ? this.highScore.toLocaleString() : "--";
+
+      // 라이프 하트 (♥♥♥)
+      const heartsEl = document.getElementById("hudHearts");
+      if (heartsEl) {
+        let heartsStr = "";
+        for (let i = 0; i < p.maxLives; i++) {
+          heartsStr += i < p.lives ? "❤️" : "🖤";
+        }
+        heartsEl.textContent = heartsStr;
       }
-    }
 
-    showVictoryModal() {
-      const modal = document.getElementById("victoryModal");
-      const summaryEl = document.getElementById("victorySummary");
-      if (!modal || !summaryEl) return;
-
-      const pRank = this.player.lap >= this.rival.lap ? "1위 (우승! 🏆)" : "2위 (준우승 🥈)";
-      summaryEl.innerHTML = `
-        <div class="result-rank">${pRank}</div>
-        <div class="result-item"><span>총 경기 시간:</span> <strong>${this.totalRaceTime.toFixed(2)}초</strong></div>
-        <div class="result-item"><span>최고 랩타임:</span> <strong>${this.player.bestLapTime.toFixed(2)}초</strong></div>
-      `;
-      modal.style.display = "flex";
+      // 니트로 바 게이지
+      const nitroBarEl = document.getElementById("hudNitroBar");
+      if (nitroBarEl) {
+        nitroBarEl.style.width = `${Math.round(p.nitro)}%`;
+      }
     }
 
     draw() {
@@ -660,133 +792,217 @@
       const w = this.canvas.width;
       const h = this.canvas.height;
 
-      // 잔디밭 배경
+      // 1. 화면 진동 트랜스폼 적용
+      ctx.save();
+      if (this.shakeIntensity > 0) {
+        const shakeX = (Math.random() - 0.5) * this.shakeIntensity * 2;
+        const shakeY = (Math.random() - 0.5) * this.shakeIntensity * 2;
+        ctx.translate(shakeX, shakeY);
+      }
+
+      // 2. 배경 잔디밭 (Grassland)
       ctx.fillStyle = "#1e3a1e";
       ctx.fillRect(0, 0, w, h);
 
-      // 잔디 결 텍스처
-      ctx.fillStyle = "#244424";
-      for (let i = 0; i < w; i += 40) {
-        ctx.fillRect(i, 0, 20, h);
+      // 도로 밖 가로 스트라이프 잔디 질감 (고속 스크롤 연출)
+      const scrollOffset = (this.distance * 12) % 60;
+      ctx.fillStyle = "#224222";
+      for (let y = -60 + scrollOffset; y < h; y += 60) {
+        ctx.fillRect(0, y, w, 30);
       }
 
-      // 서킷 아스팔트 바깥쪽 레드/화이트 연석(Curb)
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.lineWidth = TRACK_WIDTH + 18;
-      ctx.strokeStyle = "#b91c1c";
-      this.drawCircuitPath(ctx);
-      ctx.stroke();
+      // 3. 굽이치는 도로 렌더링 (수평 슬라이스 세그먼트)
+      const sliceH = 8;
+      const totalSlices = Math.ceil(h / sliceH);
 
-      ctx.lineWidth = TRACK_WIDTH + 14;
-      ctx.strokeStyle = "#ffffff";
-      ctx.setLineDash([14, 14]);
-      this.drawCircuitPath(ctx);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      for (let i = totalSlices; i >= 0; i--) {
+        const sliceY = i * sliceH;
+        // 깊이에 따른 도로 중심 오프셋 계산
+        const depthDist = this.distance + (h - sliceY) * 0.8;
+        const roadCenterX = w / 2 + this.getCurveOffset(depthDist);
+        const roadLeft = roadCenterX - this.ROAD_WIDTH / 2;
+        const roadRight = roadCenterX + this.ROAD_WIDTH / 2;
 
-      // 서킷 아스팔트 본선 도로
-      ctx.lineWidth = TRACK_WIDTH;
-      ctx.strokeStyle = "#1f2937";
-      this.drawCircuitPath(ctx);
-      ctx.stroke();
+        // 3-1) 아스팔트 본선 노면
+        ctx.fillStyle = "#18202c";
+        ctx.fillRect(roadLeft, sliceY, this.ROAD_WIDTH, sliceH);
 
-      // 도로 중앙 점선
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-      ctx.setLineDash([16, 20]);
-      this.drawCircuitPath(ctx);
-      ctx.stroke();
-      ctx.setLineDash([]);
+        // 3-2) 도로 양쪽 적백 연석 (Curb / Rumble Strip)
+        const curbWidth = 16;
+        const isRed = Math.floor((depthDist * 0.1) % 2) === 0;
+        ctx.fillStyle = isRed ? "#dc2626" : "#f8fafc";
+        ctx.fillRect(roadLeft - curbWidth, sliceY, curbWidth, sliceH);
+        ctx.fillRect(roadRight, sliceY, curbWidth, sliceH);
 
-      // 영구 스키드마크 레이어 합성
-      ctx.drawImage(this.skidCanvas, 0, 0);
-
-      // 황금 부스트 패드 렌더링
-      for (const b of BOOST_PADS) {
-        ctx.save();
-        ctx.translate(b.x, b.y);
-        ctx.rotate(b.angle);
-        ctx.fillStyle = "#eab308";
-        ctx.shadowColor = "#fde047";
-        ctx.shadowBlur = 12;
-
-        for (let k = -1; k <= 1; k++) {
-          ctx.beginPath();
-          ctx.moveTo(k * 18 - 8, -14);
-          ctx.lineTo(k * 18 + 6, 0);
-          ctx.lineTo(k * 18 - 8, 14);
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = "#ffffff";
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-
-      // 스타트 / 피니시 라인 (체커보드 그리드)
-      ctx.save();
-      const startP = WAYPOINTS[0];
-      ctx.translate(startP.x, startP.y);
-      const rows = 2;
-      const cols = 8;
-      const cellW = 8;
-      const cellH = TRACK_WIDTH / cols;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          ctx.fillStyle = (r + c) % 2 === 0 ? "#ffffff" : "#000000";
-          ctx.fillRect(r * cellW - 8, c * cellH - TRACK_WIDTH / 2, cellW, cellH);
+        // 3-3) 중앙 점선 차선 (3개 차선 -> 2개의 구분선)
+        const laneWidth = this.ROAD_WIDTH / this.LANE_COUNT;
+        const isDashed = Math.floor((depthDist * 0.15) % 2) === 0;
+        if (isDashed) {
+          ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+          ctx.fillRect(roadLeft + laneWidth - 2, sliceY, 4, sliceH);
+          ctx.fillRect(roadLeft + laneWidth * 2 - 2, sliceY, 4, sliceH);
         }
       }
-      ctx.restore();
 
-      // 파티클 렌더링
+      // 4. 엔티티 렌더링 (장애물, 트래픽 차량, 코인 등)
+      for (const ent of this.entities) {
+        this.drawEntity(ctx, ent);
+      }
+
+      // 5. 파티클 렌더링
       for (const pt of this.particles) {
         ctx.fillStyle = pt.color;
-        ctx.globalAlpha = Math.max(0, pt.life);
         ctx.beginPath();
         ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
         ctx.fill();
-        ctx.globalAlpha = 1.0;
       }
 
-      // 라이벌 AI 차량 렌더링
-      this.drawCar(ctx, this.rivalImg, this.rival.x, this.rival.y, this.rival.angle, 26, 52);
+      // 6. 플레이어 차량 렌더링
+      this.drawPlayer(ctx);
 
-      // 플레이어 차량 렌더링
-      this.drawCar(ctx, this.playerImg, this.player.x, this.player.y, this.player.angle, 25, 52);
-    }
-
-    drawCircuitPath(ctx) {
-      ctx.beginPath();
-      const n = WAYPOINTS.length;
-      ctx.moveTo(WAYPOINTS[0].x, WAYPOINTS[0].y);
-      for (let i = 1; i <= n; i++) {
-        const curr = WAYPOINTS[i % n];
-        const prev = WAYPOINTS[(i - 1) % n];
-        const mx = (prev.x + curr.x) / 2;
-        const my = (prev.y + curr.y) / 2;
-        ctx.quadraticCurveTo(prev.x, prev.y, mx, my);
+      // 7. 플로팅 텍스트 렌더링
+      ctx.font = "bold 16px 'Noto Sans KR', sans-serif";
+      ctx.textAlign = "center";
+      for (const ft of this.floatingTexts) {
+        ctx.fillStyle = ft.color;
+        ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+        ctx.shadowBlur = 6;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.shadowBlur = 0;
       }
-      ctx.closePath();
+
+      ctx.restore();
     }
 
-    drawCar(ctx, img, x, y, angle, width, height) {
+    drawPlayer(ctx) {
+      const p = this.player;
+
+      // 무적 점멸 효과 (Invincible Blink)
+      if (p.invincibleTimer > 0 && Math.floor(p.invincibleTimer * 12) % 2 === 0) {
+        return;
+      }
+
       ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(angle + Math.PI / 2);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.tiltAngle);
 
-      // 차량 지면 그림자
-      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+      // 차체 하부 지면 그림자
+      ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
       ctx.beginPath();
-      ctx.ellipse(3, 4, width / 2, height / 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(3, 8, p.width / 2 + 2, p.height / 2 - 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      if (img.complete && img.naturalWidth > 0) {
-        ctx.drawImage(img, -width / 2, -height / 2, width, height);
+      // 플레이어 차량 이미지 렌더링
+      if (this.playerImg.complete && this.playerImg.naturalWidth > 0) {
+        ctx.drawImage(this.playerImg, -p.width / 2, -p.height / 2, p.width, p.height);
       } else {
+        // 이미지 로딩 중 대체 박스
         ctx.fillStyle = "#ef4444";
-        ctx.fillRect(-width / 2, -height / 2, width, height);
+        ctx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
       }
+
+      // 전조등 헤드라이트 빔 효과 (전방 위쪽을 밝게 비춤)
+      const grad = ctx.createLinearGradient(0, -p.height / 2, 0, -p.height / 2 - 120);
+      grad.addColorStop(0, "rgba(255, 255, 200, 0.25)");
+      grad.addColorStop(1, "rgba(255, 255, 200, 0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(-15, -p.height / 2);
+      ctx.lineTo(-45, -p.height / 2 - 120);
+      ctx.lineTo(45, -p.height / 2 - 120);
+      ctx.lineTo(15, -p.height / 2);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    drawEntity(ctx, ent) {
+      ctx.save();
+      ctx.translate(ent.x, ent.y);
+
+      if (ent.type === "traffic") {
+        // 트래픽 차량 (노란색 스포츠카)
+        ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+        ctx.beginPath();
+        ctx.ellipse(2, 6, ent.width / 2, ent.height / 2 - 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (this.trafficImg.complete && this.trafficImg.naturalWidth > 0) {
+          ctx.drawImage(this.trafficImg, -ent.width / 2, -ent.height / 2, ent.width, ent.height);
+        } else {
+          ctx.fillStyle = "#eab308";
+          ctx.fillRect(-ent.width / 2, -ent.height / 2, ent.width, ent.height);
+        }
+      } else if (ent.type === "barrier") {
+        // 공사 바리케이드 (오렌지/화이트 스트라이프)
+        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.fillRect(-ent.width / 2 + 2, 4, ent.width, ent.height / 2);
+
+        ctx.fillStyle = "#f97316";
+        ctx.fillRect(-ent.width / 2, -ent.height / 2, ent.width, ent.height);
+
+        ctx.fillStyle = "#ffffff";
+        for (let x = -ent.width / 2 + 4; x < ent.width / 2; x += 14) {
+          ctx.beginPath();
+          ctx.moveTo(x, -ent.height / 2);
+          ctx.lineTo(x + 7, -ent.height / 2);
+          ctx.lineTo(x, ent.height / 2);
+          ctx.lineTo(x - 7, ent.height / 2);
+          ctx.fill();
+        }
+
+        ctx.strokeStyle = "#334155";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-ent.width / 2, -ent.height / 2, ent.width, ent.height);
+      } else if (ent.type === "oil") {
+        // 오일 슬릭 (미끄러운 검은 타원 웅덩이)
+        ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, ent.width / 2, ent.height / 2, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
+        ctx.beginPath();
+        ctx.ellipse(-4, -2, ent.width / 4, ent.height / 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (ent.type === "coin") {
+        // 황금 코인
+        ctx.shadowColor = "#facc15";
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = "#eab308";
+        ctx.beginPath();
+        ctx.arc(0, 0, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#fef08a";
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#ca8a04";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("★", 0, 0);
+        ctx.shadowBlur = 0;
+      } else if (ent.type === "nitro") {
+        // 니트로 부스트 캡슐
+        ctx.shadowColor = "#38bdf8";
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = "#0284c7";
+        ctx.beginPath();
+        ctx.roundRect(-10, -14, 20, 28, 6);
+        ctx.fill();
+
+        ctx.fillStyle = "#38bdf8";
+        ctx.font = "bold 11px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("N₂O", 0, 0);
+        ctx.shadowBlur = 0;
+      }
+
       ctx.restore();
     }
 
@@ -803,7 +1019,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("gameCanvas")) {
-      window.turboGame = new TurboApexGame();
+      window.turboGame = new ApexHighwayGame();
     }
   });
 })();

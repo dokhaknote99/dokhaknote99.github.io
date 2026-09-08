@@ -1154,6 +1154,29 @@ body.game-page {
   color: #38bdf8;
 }
 
+.hud-value.hearts {
+  font-size: 1.15rem;
+  letter-spacing: 0.15rem;
+}
+
+.nitro-bar-container {
+  width: 120px;
+  height: 14px;
+  background-color: #020617;
+  border: 1px solid #334155;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.nitro-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+  border-radius: 9999px;
+  transition: width 0.08s linear;
+}
+
 .hud-unit {
   font-size: 0.8rem;
   color: #64748b;

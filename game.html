@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>게임 | dokhaknote99 포트폴리오</title>
-  <link rel="stylesheet" href="css/style.css?v=13">
+  <link rel="stylesheet" href="css/style.css?v=14">
 </head>
 <body class="game-page">
 
@@ -29,11 +29,11 @@
   <main class="game-wrapper">
     <!-- 상단 게임 인트로 헤더 -->
     <section class="game-intro">
-      <div class="game-badge">MINI ARCADE</div>
-      <h1 class="game-title">Turbo Apex : 2D Top-Down Racing</h1>
+      <div class="game-badge">HIGHWAY RUNNER ARCADE</div>
+      <h1 class="game-title">Apex Highway : 2D Vertical Curve Racer</h1>
       <p class="game-subtitle">
-        외부 라이브러리 없이 <strong>순수 HTML5 Canvas + Web Audio API</strong>로 직접 설계·구현한 탑뷰 레이싱 게임 엔진입니다.
-        정밀한 드리프트 관성 물리, 노면 마찰 판정, 절차적 엔진 사운드 신디사이징, 자율주행 AI 라이벌을 체험해보세요.
+        화면 상향(전방)을 응시하며 <strong>굽이치는 와인딩 커브길</strong>을 고속 질주하는 아케이드 레이싱 엔진입니다.
+        트래픽 차량과 도로 바리케이드, 미끄러운 오일 웅덩이를 피해 달리고 <strong>니트로 부스트</strong>로 한계 속도를 돌파해보세요!
       </p>
     </section>
 
@@ -45,17 +45,27 @@
           <span class="hud-label">속도</span>
           <div class="hud-val-wrap"><span id="hudSpeed" class="hud-value">0</span> <span class="hud-unit">km/h</span></div>
         </div>
-        <div class="hud-item hud-lap">
-          <span class="hud-label">진행 랩</span>
-          <div class="hud-val-wrap"><span id="hudLap" class="hud-value">1 / 3</span></div>
+        <div class="hud-item hud-dist">
+          <span class="hud-label">주행 거리</span>
+          <div class="hud-val-wrap"><span id="hudDistance" class="hud-value">0m</span></div>
         </div>
-        <div class="hud-item hud-time">
-          <span class="hud-label">현재 랩타임</span>
-          <div class="hud-val-wrap"><span id="hudTime" class="hud-value">0.00s</span></div>
+        <div class="hud-item hud-life">
+          <span class="hud-label">내구도 (라이프)</span>
+          <div class="hud-val-wrap"><span id="hudHearts" class="hud-value hearts">❤️❤️❤️</span></div>
+        </div>
+        <div class="hud-item hud-nitro">
+          <span class="hud-label">⚡ 니트로 부스트</span>
+          <div class="nitro-bar-container">
+            <div id="hudNitroBar" class="nitro-bar-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+        <div class="hud-item hud-score">
+          <span class="hud-label">점수</span>
+          <div class="hud-val-wrap"><span id="hudScore" class="hud-value highlight">0</span></div>
         </div>
         <div class="hud-item hud-best">
           <span class="hud-label">🏆 최고 기록</span>
-          <div class="hud-val-wrap"><span id="hudBestLap" class="hud-value highlight">--:--</span></div>
+          <div class="hud-val-wrap"><span id="hudBestLap" class="hud-value">--</span></div>
         </div>
         <div class="hud-actions">
           <button id="btnMute" class="hud-btn" type="button" title="사운드 토글">🔊 사운드 켬</button>
@@ -70,48 +80,46 @@
         <!-- 스타트 전 오버레이 화면 -->
         <div id="gameOverlay" class="game-overlay">
           <div class="overlay-card">
-            <h2 class="overlay-title">🏎️ TURBO APEX</h2>
-            <p class="overlay-desc">화면을 클릭하여 엔진 시동을 걸고 레이스를 시작하세요!</p>
+            <h2 class="overlay-title">🏎️ APEX HIGHWAY</h2>
+            <p class="overlay-desc">화면을 클릭하여 엔진 시동을 걸고 고속도로 질주를 시작하세요!</p>
 
             <div class="control-guides">
               <div class="guide-row">
                 <span class="guide-keys">W / ↑</span>
-                <span class="guide-desc">가속 (가속 페달)</span>
+                <span class="guide-desc">가속 페달 (최대 250km/h)</span>
               </div>
               <div class="guide-row">
                 <span class="guide-keys">S / ↓</span>
-                <span class="guide-desc">감속 및 후진</span>
+                <span class="guide-desc">브레이크 감속</span>
               </div>
               <div class="guide-row">
                 <span class="guide-keys">A, D / ←, →</span>
-                <span class="guide-desc">좌/우 스티어링 조향</span>
+                <span class="guide-desc">좌/우 차선 이동 & 커브 조향 (차체 틸팅)</span>
               </div>
               <div class="guide-row">
                 <span class="guide-keys">SPACE</span>
-                <span class="guide-desc">핸드브레이크 & 드리프트</span>
+                <span class="guide-desc">⚡ 니트로 부스트 점화!</span>
               </div>
             </div>
 
             <div class="game-tips">
-              <span>💡 코너링 시 스페이스바로 뒷바퀴를 미끄러뜨려 드리프트를 시도해보세요!</span>
-              <span>⚡ 트랙 위 황금색 화살표 부스트 패드를 밟으면 폭발적으로 가속합니다.</span>
+              <span>💡 <strong>커브길 주의</strong>: 굽이치는 도로를 벗어나 잔디밭으로 들어가면 속도가 급감합니다.</span>
+              <span>🚗 <strong>추월 보너스</strong>: 앞서가는 트래픽 차량을 스치듯 추월하면 +50점 보너스 획득!</span>
+              <span>⚠️ <strong>장애물 조심</strong>: 공사 바리케이드는 충돌 시 하트(-1)가 깎이고, 오일 웅덩이는 일시적 스핀을 유발합니다.</span>
             </div>
 
-            <button id="btnStart" class="game-start-btn" type="button">레이스 시작 (START RACE)</button>
+            <button id="btnStart" class="game-start-btn" type="button">고속도로 질주 시작 (START RACE)</button>
           </div>
         </div>
 
-        <!-- 카운트다운 3, 2, 1, GO! 레이어 -->
-        <div id="countdownDisplay" class="countdown-display" style="display: none;">3</div>
-
-        <!-- 경기 완료 결과 모달 -->
+        <!-- 경기 완료 / 게임 오버 모달 -->
         <div id="victoryModal" class="victory-modal" style="display: none;">
           <div class="victory-card">
-            <h2 class="victory-title">🏁 RACE FINISHED!</h2>
+            <h2 class="victory-title">🏁 GAME OVER</h2>
             <div id="victorySummary" class="victory-summary">
               <!-- JS에서 동적 주입 -->
             </div>
-            <button onclick="window.turboGame.resetGame()" class="game-start-btn restart-btn" type="button">다시 도전하기</button>
+            <button onclick="window.turboGame.resetGame()" class="game-start-btn restart-btn" type="button">다시 질주하기</button>
           </div>
         </div>
       </div>
@@ -123,8 +131,8 @@
           <button id="btnRight" class="ctrl-btn dpad-btn" type="button" aria-label="우회전">▶</button>
         </div>
         <div class="mobile-actions">
-          <button id="btnDrift" class="ctrl-btn action-drift" type="button">⚡ DRIFT</button>
-          <button id="btnBrake" class="ctrl-btn action-brake" type="button">▼ 후진</button>
+          <button id="btnDrift" class="ctrl-btn action-drift" type="button">⚡ NITRO</button>
+          <button id="btnBrake" class="ctrl-btn action-brake" type="button">▼ 브레이크</button>
           <button id="btnGas" class="ctrl-btn action-gas" type="button">▲ 가속</button>
         </div>
       </div>
@@ -132,14 +140,29 @@
 
     <!-- 기술 구현 명세 카드 (아키텍처 쇼케이스) -->
     <section class="game-tech-section">
-      <h3 class="tech-section-title">엔지니어링 아키텍처 & 핵심 구현 기술</h3>
+      <h3 class="tech-section-title">엔지니어링 아키텍처 & 핵심 기술 명세</h3>
       <div class="tech-card-grid">
         <div class="tech-spec-card">
-          <div class="spec-icon">🏎️</div>
-          <h4 class="spec-title">동역학 물리 & 슬립 모델</h4>
+          <div class="spec-icon">🛣️</div>
+          <h4 class="spec-title">절차적 커브 도로 렌더러</h4>
           <p class="spec-desc">
-            속도 가변형 조향 계수와 전륜/후륜 접지력 차이를 모델링한 2D 관성 드리프트 알고리즘을 적용했습니다.
-            미끄러짐 발생 시 횡방향 벡터를 계산하여 영구 캔버스 레이어에 타이어 스키드 마크를 남기고 흰 연기 파티클을 분사합니다.
+            주행 거리와 화면 수직 깊이($Y$)에 따라 복합 삼각함수(Sine Wave)를 합성하여 부드럽게 좌우로 굽이치는 도로 중심 좌표를 실시간 계산하고, 8px 정밀 슬라이스로 연석과 차선을 60FPS로 렌더링합니다.
+          </p>
+        </div>
+
+        <div class="tech-spec-card">
+          <div class="spec-icon">🏎️</div>
+          <h4 class="spec-title">차체 틸팅 & 동역학 물리</h4>
+          <p class="spec-desc">
+            스티어링 입력에 따라 차체가 $\pm 10^\circ$ 미세 회전하며 차선을 변경하는 틸팅 물리와, 도로 이탈(Grass Out) 시 마찰 저항 급증 및 스파크·먼지 파티클 방출 시스템을 구현했습니다.
+          </p>
+        </div>
+
+        <div class="tech-spec-card">
+          <div class="spec-icon">🤖</div>
+          <h4 class="spec-title">동적 트래픽 & 장애물 AI</h4>
+          <p class="spec-desc">
+            커브 곡률에 동기화되는 3차선 트래픽 차량, 공사 바리케이드, 회전 미끄러짐을 유발하는 오일 슬릭, 황금 코인 및 니트로 충전 캡슐이 플레이어 속도에 맞춰 상대 벡터로 정밀 스폰됩니다.
           </p>
         </div>
 
@@ -147,31 +170,14 @@
           <div class="spec-icon">🔊</div>
           <h4 class="spec-title">Web Audio API 신디사이저</h4>
           <p class="spec-desc">
-            외부 오디오 파일 다운로드 없이 브라우저 내장 Web Audio API를 활용하여 Sawtooth 파형과 Low-Pass 필터로 RPM 비례 엔진음을 실시간 변조하고,
-            Band-Pass 노이즈 필터로 타이어 스키드음을 프로시저 방식으로 합성했습니다.
-          </p>
-        </div>
-
-        <div class="tech-spec-card">
-          <div class="spec-icon">🤖</div>
-          <h4 class="spec-title">웨이포인트 자율주행 AI</h4>
-          <p class="spec-desc">
-            15개의 노드 기반 닫힌 경로(Closed Circuit)를 따라 각도 편차를 부드럽게 보정하며 주행하는 AI 라이벌 차량(노란색 머신)이 탑재되어 실제 경주 레이싱의 긴장감을 제공합니다.
-          </p>
-        </div>
-
-        <div class="tech-spec-card">
-          <div class="spec-icon">⚡</div>
-          <h4 class="spec-title">트랙 판정 & 랩타임 시스템</h4>
-          <p class="spec-desc">
-            점과 선분 사이의 최단 거리 수식을 기반으로 아스팔트 노면과 잔디밭 오프코스를 O(1) 수준으로 판별하여 잔디 진입 시 감속 및 잔디 먼지 파티클을 연출하며, 로컬스토리지를 통한 최고 랩타임 영구 보존을 지원합니다.
+            외부 오디오 에셋 의존 없이 브라우저 내장 Web Audio API로 가속 속도에 비례하는 Sawtooth 엔진 RPM 가변음, 화이트 노이즈 타이어 스키드음, 충돌 임팩트 사운드를 100% 프로시저 방식으로 합성합니다.
           </p>
         </div>
       </div>
     </section>
   </main>
 
-  <script src="js/game.js?v=13"></script>
-  <script src="js/main.js?v=13"></script>
+  <script src="js/game.js?v=14"></script>
+  <script src="js/main.js?v=14"></script>
 </body>
 </html>
