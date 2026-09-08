@@ -42,13 +42,14 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 2번 퇴장 모션: 화면이 위로 40px 슥 올라가며 페이드아웃
+      // 2번 퇴장 모션: 클릭 즉시 180ms 만에 신속 이동
       e.preventDefault();
       document.body.classList.add("page-slide-exit");
 
       setTimeout(() => {
         window.location.href = href;
-      }, 350);
+      }, 180);
+
     });
   });
 

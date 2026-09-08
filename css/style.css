@@ -30,15 +30,15 @@ body {
   display: flex;
   flex-direction: column;
   opacity: 0;
-  animation: pageRiseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  animation: pageRiseIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 2번 등장 모션: 아래에서 위로 40px 살포시 떠오르며 안착 */
+/* 2번 등장 모션: 아래에서 위로 24px 빠르고 산뜻하게 안착 */
 @keyframes pageRiseIn {
   0% {
     opacity: 0;
-    transform: translateY(40px);
+    transform: translateY(24px);
   }
   100% {
     opacity: 1;
@@ -46,12 +46,13 @@ body {
   }
 }
 
-/* 2번 퇴장 모션: 위로 40px 슥 올라가며 사라짐 */
+/* 2번 퇴장 모션: 클릭 즉시 0.18초 만에 위로 24px 날렵하게 슬라이드 */
 body.page-slide-exit {
   opacity: 0 !important;
-  transform: translateY(-40px) !important;
-  transition: opacity 0.35s ease, transform 0.35s ease !important;
+  transform: translateY(-24px) !important;
+  transition: opacity 0.18s cubic-bezier(0.4, 0, 1, 1), transform 0.18s cubic-bezier(0.4, 0, 1, 1) !important;
 }
+
 
 
 
