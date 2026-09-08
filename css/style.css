@@ -29,7 +29,27 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  opacity: 0;
+  animation: pageSlideRiseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+@keyframes pageSlideRiseIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+body.page-exit {
+  opacity: 0 !important;
+  transform: translateY(-20px) !important;
+}
+
 
 /* ==========================================================================
    상단 네비게이션 & 탭 바 (Navbar & Tabs)
