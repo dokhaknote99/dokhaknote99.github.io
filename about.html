@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>자기소개 | dokhaknote99 포트폴리오</title>
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
-<body>
+<body class="about-page">
 
   <!-- 0.4초 시네마틱 페이드 전환 오버레이 -->
   <div id="page-transition-overlay"></div>
@@ -25,18 +25,202 @@
     </div>
   </header>
 
-  <!-- 메인 콘텐츠 영역 -->
-  <main class="main-container">
-    <section class="content-card">
-      <h1 class="page-title">자기소개 (About Me)</h1>
-      <p class="page-desc">저에 대한 이야기와 기술 스택, 경험을 소개하는 페이지입니다.</p>
-
-      <!-- 자기소개 빈 페이지 구조 뼈대 -->
-      <div class="placeholder-box">
-        <h3>🙋‍♂️ 자기소개 영역 구조</h3>
-        <p>이곳에 프로필 사진, 인적 사항, 보유 기술 스택(Skills), 이력 및 학력 사항 등을 추가할 수 있습니다.</p>
+  <!-- 이력서 메인 컨테이너 -->
+  <main class="resume-wrapper">
+    <!-- 상단 프로필 헤더 -->
+    <header class="resume-header">
+      <div class="profile-avatar-wrap">
+        <img src="images/profile.jpg" alt="김도학 프로필 사진" class="profile-avatar">
       </div>
-    </section>
+      <div class="profile-info">
+        <div class="name-block">
+          <h1 class="candidate-name">김도학 <span class="candidate-en">Do-Hak Kim</span></h1>
+          <p class="candidate-title">풀스택 소프트웨어 엔지니어 · Full-Stack Engineer</p>
+        </div>
+        <p class="candidate-pitch">
+          동작의 원리를 깊이 파고들어 본질적인 문제를 해결하는 개발자입니다.
+          단순히 동작하는 코드를 넘어, 동료가 읽기 편한 구조와 사용자가 체감하는 매끄러운 성능 및 안정적인 아키텍처를 추구합니다.
+        </p>
+        <ul class="contact-list">
+          <li><span>✉</span> <a href="mailto:dokhaknote99@gmail.com">dokhaknote99@gmail.com</a></li>
+          <li><span>🐙</span> <a href="https://github.com/dokhaknote99" target="_blank" rel="noopener">github.com/dokhaknote99</a></li>
+          <li><span>📍</span> <span>Seoul, Republic of Korea</span></li>
+        </ul>
+      </div>
+    </header>
+
+    <!-- 2단 그리드 본문 레이아웃 -->
+    <div class="resume-grid">
+      <!-- 메인 영역: 소개, 경력, 프로젝트, 학력 -->
+      <div class="resume-main">
+        <!-- 소개 섹션 -->
+        <section class="resume-section">
+          <h2 class="section-title">소개</h2>
+          <div class="section-content narrative">
+            <p>
+              새로운 기술이나 라이브러리를 도입할 때 유행을 따르기보다, 브라우저 렌더링 파이프라인, 비동기 런타임 동작 방식, 네트워크 비용을 면밀히 분석하여 최적의 기술적 결정을 내립니다.
+            </p>
+            <p>
+              화면의 0.1초 반응성과 1픽셀의 시각적 디테일부터 서버 사이드 데이터 파이프라인까지 전체 흐름을 일관된 완성도로 구현하는 데 집중합니다.
+            </p>
+          </div>
+        </section>
+
+        <!-- 경력 섹션 -->
+        <section class="resume-section">
+          <h2 class="section-title">경력</h2>
+          <div class="timeline">
+            <article class="timeline-item">
+              <div class="item-header">
+                <div>
+                  <h3 class="item-title">소프트웨어 엔지니어</h3>
+                  <p class="item-company">테크랩스 (TechLabs Inc.)</p>
+                </div>
+                <span class="item-period">2024.03 — 현재</span>
+              </div>
+              <p class="item-summary">B2B SaaS 대시보드 및 실시간 데이터 시각화 플랫폼 코어 개발</p>
+              <ul class="item-bullets">
+                <li>대용량 시계열 데이터 차트 렌더링 가상화 도입으로 페이지 초기 로딩 속도 48% 개선</li>
+                <li>공통 디자인 시스템 컴포넌트 30여 종 구축 및 재사용성 향상으로 프론트엔드 개발 생산성 제고</li>
+                <li>WebSocket 기반 실시간 데이터 스트리밍 파이프라인 최적화로 연결 끊김률 95% 감소</li>
+              </ul>
+            </article>
+
+            <article class="timeline-item">
+              <div class="item-header">
+                <div>
+                  <h3 class="item-title">프론트엔드 개발자</h3>
+                  <p class="item-company">스튜디오 웨이브 (Studio Wave)</p>
+                </div>
+                <span class="item-period">2022.08 — 2024.01</span>
+              </div>
+              <p class="item-summary">고객 맞춤형 반응형 웹 서비스 및 인터랙티브 인터페이스 구축</p>
+              <ul class="item-bullets">
+                <li>Lighthouse 웹 성능 지표 점수를 65점에서 96점으로 대폭 개선하여 사용자 이탈 방지</li>
+                <li>CSS GPU 가속 및 requestAnimationFrame 최적화로 60fps 부드러운 화면 전환 인터랙션 구현</li>
+                <li>다양한 모바일/데스크톱 브라우저 대상 크로스 브라우징 및 웹 접근성(WCAG AA) 준수</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <!-- 주요 프로젝트 섹션 -->
+        <section class="resume-section">
+          <h2 class="section-title">주요 프로젝트</h2>
+          <div class="projects-list">
+            <article class="project-item">
+              <div class="project-header">
+                <h3 class="project-name">초경량 인터랙티브 웹 포트폴리오</h3>
+                <span class="project-role">개인 프로젝트 · 2026</span>
+              </div>
+              <p class="project-desc">
+                무거운 외부 번들러나 UI 프레임워크에 의존하지 않고 순수 HTML5, CSS3, Vanilla JavaScript만으로 구축한 고성능 개인 포트폴리오 사이트입니다. 부드러운 0.4초 시네마틱 페이드 전환 및 오차 없는 배경 비디오 루프 엔진을 자체 개발했습니다.
+              </p>
+              <div class="tech-tags">
+                <span>Vanilla JS</span>
+                <span>Modern CSS Grid</span>
+                <span>GitHub Pages</span>
+                <span>Core Web Vitals</span>
+              </div>
+            </article>
+
+            <article class="project-item">
+              <div class="project-header">
+                <h3 class="project-name">실시간 데이터 모니터링 대시보드</h3>
+                <span class="project-role">팀 프로젝트 · 2025</span>
+              </div>
+              <p class="project-desc">
+                초당 대량의 시스템 메트릭 이벤트를 실시간으로 집계 및 시각화하는 모니터링 허브입니다. Web Worker를 활용한 연산 분리로 메인 UI 스레드 블로킹을 방지했습니다.
+              </p>
+              <div class="tech-tags">
+                <span>TypeScript</span>
+                <span>Canvas API</span>
+                <span>FastAPI</span>
+                <span>Web Worker</span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- 학력 섹션 -->
+        <section class="resume-section">
+          <h2 class="section-title">학력</h2>
+          <div class="education-item">
+            <div class="item-header">
+              <div>
+                <h3 class="item-title">컴퓨터공학 학사</h3>
+                <p class="item-company">한국대학교 (Hankook University)</p>
+              </div>
+              <span class="item-period">2018.03 — 2022.02</span>
+            </div>
+            <p class="edu-note">자료구조, 알고리즘, 컴퓨터 네트워크, 운영체제 전공 이수</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- 사이드바: 기술 스택, 역량, 자격, 관심분야 -->
+      <aside class="resume-sidebar">
+        <!-- 기술 스택 -->
+        <section class="sidebar-section">
+          <h2 class="sidebar-title">기술 스택</h2>
+
+          <div class="skill-category">
+            <h3 class="category-name">Frontend</h3>
+            <p class="category-detail">HTML5, Modern CSS / Grid, JavaScript (ES6+), TypeScript, React</p>
+          </div>
+
+          <div class="skill-category">
+            <h3 class="category-name">Backend</h3>
+            <p class="category-detail">Node.js, Express, Python, FastAPI, PostgreSQL, RESTful API</p>
+          </div>
+
+          <div class="skill-category">
+            <h3 class="category-name">DevOps & Tools</h3>
+            <p class="category-detail">Git, GitHub Actions, Docker, Linux, Vite, Figma</p>
+          </div>
+        </section>
+
+        <!-- 핵심 역량 -->
+        <section class="sidebar-section">
+          <h2 class="sidebar-title">핵심 역량</h2>
+          <ul class="strength-list">
+            <li><strong>원인 규명 집요함</strong>: 복잡한 버그와 성능 병목의 근본 원인을 끝까지 추적하고 재발 방지</li>
+            <li><strong>엔지니어링 완성도</strong>: 브라우저 사양 및 웹 표준을 준수하는 깔끔한 클린 코드 지향</li>
+            <li><strong>명확한 소통과 기록</strong>: 누구나 쉽게 이해할 수 있는 체계적인 기술 문서 작성 및 지식 공유</li>
+          </ul>
+        </section>
+
+        <!-- 자격 및 언어 -->
+        <section class="sidebar-section">
+          <h2 class="sidebar-title">자격 및 언어</h2>
+          <ul class="meta-list">
+            <li>
+              <span class="meta-label">정보처리기사</span>
+              <span class="meta-sub">한국산업인력공단 (2022)</span>
+            </li>
+            <li>
+              <span class="meta-label">SQLD (SQL 개발자)</span>
+              <span class="meta-sub">한국데이터산업진흥원 (2023)</span>
+            </li>
+            <li>
+              <span class="meta-label">영어 (English)</span>
+              <span class="meta-sub">기술 공식 문서 독해 및 기술 커뮤니케이션 가능</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- 관심 분야 -->
+        <section class="sidebar-section">
+          <h2 class="sidebar-title">관심 분야</h2>
+          <div class="focus-tags">
+            <span>Web Performance</span>
+            <span>UI Architecture</span>
+            <span>Developer Experience</span>
+            <span>Design Systems</span>
+          </div>
+        </section>
+      </aside>
+    </div>
   </main>
 
   <!-- 푸터 -->
