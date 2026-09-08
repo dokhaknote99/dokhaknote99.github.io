@@ -47,7 +47,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 내부 링크 클릭 시 2번 (Slide & Rise) 전환 효과
+  // --------------------------------------------------------------------------
+  // 0.4초 시네마틱 페이드 전환 (Fade Out & Fade In) 제어
+  // --------------------------------------------------------------------------
+  let overlay = document.getElementById("page-transition-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "page-transition-overlay";
+    document.body.prepend(overlay);
+  }
+
+  // 페이지 진입 시 0.4초 페이드인 (오버레이 서서히 투명해짐)
+  void overlay.offsetHeight; // 초기 opacity 1 커밋 유도
+  requestAnimationFrame(() => {
+    overlay.classList.remove("fade-out");
+    overlay.classList.add("fade-in");
+  });
+
+  // 브라우저 뒤로가기/앞으로가기(bfcache) 복귀 시 화면 페이드 복원
+  window.addEventListener("pageshow", () => {
+    isTransitioning = false;
+    if (overlay) {
+      overlay.classList.remove("fade-out");
+      void overlay.offsetHeight;
+      requestAnimationFrame(() => {
+        overlay.classList.add("fade-in");
+      });
+    }
+  });
+
+  // 내부 링크 클릭 시 0.4초(400ms) 페이드아웃 후 페이지 이동
+  let isTransitioning = false;
   const links = document.querySelectorAll("a[href]");
 
   links.forEach((link) => {
@@ -75,22 +105,20 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 페이드아웃 전환 적용 후 200ms 뒤 이동
+      // 기본 이동 방지 및 0.4초 페이드아웃 실행
       e.preventDefault();
-      document.body.classList.add("page-fade-exit");
+      if (isTransitioning) return;
+      isTransitioning = true;
+
+      if (overlay) {
+        overlay.classList.remove("fade-in");
+        overlay.classList.add("fade-out");
+      }
 
       setTimeout(() => {
         window.location.href = href;
-      }, 200);
-
+      }, 400); // 0.4초(400ms) 대기 후 이동
     });
-  });
-
-  // 브라우저 뒤로가기(bfcache) 복귀 시 화면 복원
-  window.addEventListener("pageshow", (event) => {
-    if (event.persisted || document.body.classList.contains("page-fade-exit")) {
-      document.body.classList.remove("page-fade-exit");
-    }
   });
 });
 
