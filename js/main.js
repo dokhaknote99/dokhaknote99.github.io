@@ -75,23 +75,24 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 2번 퇴장 모션: 클릭 즉시 180ms 만에 신속 이동
+      // 페이드아웃 전환 적용 후 200ms 뒤 이동
       e.preventDefault();
-      document.body.classList.add("page-slide-exit");
+      document.body.classList.add("page-fade-exit");
 
       setTimeout(() => {
         window.location.href = href;
-      }, 180);
+      }, 200);
 
     });
   });
 
   // 브라우저 뒤로가기(bfcache) 복귀 시 화면 복원
   window.addEventListener("pageshow", (event) => {
-    if (event.persisted || document.body.classList.contains("page-slide-exit")) {
-      document.body.classList.remove("page-slide-exit");
+    if (event.persisted || document.body.classList.contains("page-fade-exit")) {
+      document.body.classList.remove("page-fade-exit");
     }
   });
 });
+
 
 

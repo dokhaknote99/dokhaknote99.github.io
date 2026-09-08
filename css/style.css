@@ -30,28 +30,26 @@ body {
   display: flex;
   flex-direction: column;
   opacity: 0;
-  animation: pageRiseIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: pageFadeIn 0.3s ease-out forwards;
+  transition: opacity 0.2s ease-in-out;
 }
 
-/* 2번 등장 모션: 아래에서 위로 24px 빠르고 산뜻하게 안착 */
-@keyframes pageRiseIn {
-  0% {
+/* 페이드인 모션: 사르륵 부드럽게 밝아짐 */
+@keyframes pageFadeIn {
+  from {
     opacity: 0;
-    transform: translateY(24px);
   }
-  100% {
+  to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
-/* 2번 퇴장 모션: 클릭 즉시 0.18초 만에 위로 24px 날렵하게 슬라이드 */
-body.page-slide-exit {
+/* 페이드아웃 모션: 클릭 시 부드럽게 어두워지며 사라짐 */
+body.page-fade-exit {
   opacity: 0 !important;
-  transform: translateY(-24px) !important;
-  transition: opacity 0.18s cubic-bezier(0.4, 0, 1, 1), transform 0.18s cubic-bezier(0.4, 0, 1, 1) !important;
+  transition: opacity 0.2s ease-in-out !important;
 }
+
 
 
 
