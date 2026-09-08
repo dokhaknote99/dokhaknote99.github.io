@@ -173,8 +173,42 @@ body.page-slide-exit {
 }
 
 /* ==========================================================================
+   풀스크린 배경 동영상 스타일
+   ========================================================================== */
+.video-background-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.video-background {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.3));
+}
+
+/* ==========================================================================
    홈페이지 전용 풀스크린 감성 배경 & 화이트 버튼 스타일
    ========================================================================== */
+
 body.home-page {
   background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)),
                     url("../images/background.jpg");
