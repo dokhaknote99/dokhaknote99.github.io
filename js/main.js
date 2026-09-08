@@ -1,7 +1,40 @@
 // main.js - 포트폴리오 공통 자바스크립트
 
+// ==========================================================================
+// [설정] 배경 동영상 루프(반복) 구간 설정 (초 단위로 자유롭게 수정하세요)
+// ==========================================================================
+const VIDEO_LOOP = {
+  startTime: 0.0, // 루프 시작 지점 (초 단위, 기본: 0초)
+  endTime: 5.0,   // 👈 루프 종료 지점 (초 단위, 이 시간에 도달하면 즉시 시작 지점으로 이동)
+  enabled: true   // 커스텀 루프 사용 여부 (true: 사용, false: 영상 끝까지 재생 후 반복)
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   console.log("포트폴리오 페이지가 정상적으로 로드되었습니다.");
+
+  // 배경 동영상 특정 시간 루프 제어
+  const bgVideo = document.getElementById("bgVideo");
+  if (bgVideo && VIDEO_LOOP.enabled && VIDEO_LOOP.endTime > 0) {
+    // 매 프레임 정밀하게 재생 시간을 감시하여 오차 없이 즉시 되감기
+    const monitorVideoLoop = () => {
+      if (bgVideo.currentTime >= VIDEO_LOOP.endTime) {
+        bgVideo.currentTime = VIDEO_LOOP.startTime;
+        bgVideo.play();
+      }
+      requestAnimationFrame(monitorVideoLoop);
+    };
+
+    bgVideo.addEventListener("loadedmetadata", () => {
+      bgVideo.currentTime = VIDEO_LOOP.startTime;
+      requestAnimationFrame(monitorVideoLoop);
+    });
+
+    if (bgVideo.readyState >= 1) {
+      bgVideo.currentTime = VIDEO_LOOP.startTime;
+      requestAnimationFrame(monitorVideoLoop);
+    }
+  }
+
 
   // 현재 활성 페이지 탭 강조 보조 로직 (필요 시 자동 감지)
   const currentPath = window.location.pathname;
